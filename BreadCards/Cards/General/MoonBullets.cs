@@ -9,28 +9,27 @@ using UnityEngine;
 
 namespace BreadCards.Cards
 {
-    class Template : CustomCard
+    class MoonBullets : CustomCard
     {
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
-            UnityEngine.Debug.Log($"[{BreadCards.ModInitials}][Card] {GetTitle()} has been setup.");
+            gun.gravity = 0.4f;
+            gun.projectileSpeed = 0.4f;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            UnityEngine.Debug.Log($"[{BreadCards.ModInitials}][Card] {GetTitle()} has been added to player {player.playerID}.");
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            UnityEngine.Debug.Log($"[{BreadCards.ModInitials}][Card] {GetTitle()} has been removed from player {player.playerID}.");
         }
 
         protected override string GetTitle()
         {
-            return "CardName";
+            return "Moon Bullets";
         }
         protected override string GetDescription()
         {
-            return "CardDescription";
+            return "";
         }
         protected override GameObject GetCardArt()
         {
@@ -38,7 +37,7 @@ namespace BreadCards.Cards
         }
         protected override CardInfo.Rarity GetRarity()
         {
-            return CardInfo.Rarity.Common;
+            return CardInfo.Rarity.Uncommon;
         }
         protected override CardInfoStat[] GetStats()
         {
@@ -46,16 +45,23 @@ namespace BreadCards.Cards
             {
                 new CardInfoStat()
                 {
+                    positive = false,
+                    stat = "Projectile Velocity",
+                    amount = "-60%",
+                    simepleAmount = CardInfoStat.SimpleAmount.Some
+                },
+                new CardInfoStat()
+                {
                     positive = true,
-                    stat = "Effect",
-                    amount = "No",
-                    simepleAmount = CardInfoStat.SimpleAmount.notAssigned
+                    stat = "Projectile Gravity",
+                    amount = "-60%",
+                    simepleAmount = CardInfoStat.SimpleAmount.Some
                 }
             };
         }
         protected override CardThemeColor.CardThemeColorType GetTheme()
         {
-            return CardThemeColor.CardThemeColorType.ColdBlue;
+            return CardThemeColor.CardThemeColorType.FirepowerYellow;
         }
         public override string GetModName()
         {

@@ -1,44 +1,44 @@
-﻿using System;
+﻿using ClassesManagerReborn.Util;
+using ModdingUtils.Extensions;
+using ModdingUtils.Utils;
+using Photon.Pun;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.Classes.Shulker
 {
-    class BlockingMaster : CustomCard
+    class DoubleShulks : CustomCard
     {
+        public static GameObject objectToSpawn = null;
+        public static CardInfo CardInfo;
+        public override void Callback()
+        {
+            gameObject.GetOrAddComponent<ClassNameMono>().className = ShulkerClass.name;
+        }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
-            UnityEngine.Debug.Log($"[{BreadCards.ModInitials}][Card] {GetTitle()} has been setup.");
+            gun.damage = 0.7f;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            block.additionalBlocks += 1;
-            block.cooldown -= 0.2f;
-            characterStats.health -= 0.4f;
-            gun.damage -= 0.2f;
-            UnityEngine.Debug.Log($"[{BreadCards.ModInitials}][Card] {GetTitle()} has been added to player {player.playerID}.");
+            ShulkerHoming.shulkCount *= 2;
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            block.additionalBlocks -= 1;
-            block.cooldown += 0.2f;
-            characterStats.health += 0.4f;
-            gun.damage += 0.2f;
-            UnityEngine.Debug.Log($"[{BreadCards.ModInitials}][Card] {GetTitle()} has been removed from player {player.playerID}.");
+            ShulkerHoming.shulkCount /= 2;
         }
-
         protected override string GetTitle()
         {
-            return "Blocking Master";
+            return "Exteremely Shulky";
         }
         protected override string GetDescription()
         {
-            return "Block all of their bullets";
+            return "";
         }
         protected override GameObject GetCardArt()
         {
@@ -46,7 +46,7 @@ namespace BreadCards.Cards
         }
         protected override CardInfo.Rarity GetRarity()
         {
-            return CardInfo.Rarity.Uncommon;
+            return CardInfo.Rarity.Common;
         }
         protected override CardInfoStat[] GetStats()
         {
@@ -55,36 +55,22 @@ namespace BreadCards.Cards
                 new CardInfoStat()
                 {
                     positive = true,
-                    stat = "Block Amount",
-                    amount = "+1",
-                    simepleAmount = CardInfoStat.SimpleAmount.notAssigned
-                },
-                new CardInfoStat()
-                {
-                    positive = true,
-                    stat = "Block Cooldown",
-                    amount = "-20%",
+                    stat = "Shulks",
+                    amount = "+100%",
                     simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 },
                 new CardInfoStat()
                 {
                     positive = false,
-                    stat = "Health",
-                    amount = "-40%",
-                    simepleAmount = CardInfoStat.SimpleAmount.notAssigned
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Gun Damage",
-                    amount = "-20%",
+                    stat = "DMG",
+                    amount = "-30%",
                     simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 }
             };
         }
         protected override CardThemeColor.CardThemeColorType GetTheme()
         {
-            return CardThemeColor.CardThemeColorType.FirepowerYellow;
+            return CardThemeColor.CardThemeColorType.TechWhite;
         }
         public override string GetModName()
         {

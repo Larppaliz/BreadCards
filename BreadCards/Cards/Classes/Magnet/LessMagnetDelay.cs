@@ -1,42 +1,45 @@
-﻿using System;
+﻿using ClassesManagerReborn.Util;
+using ModdingUtils.Extensions;
+using ModdingUtils.Utils;
+using Photon.Pun;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
 namespace BreadCards.Cards
 {
-    class HopeIDontMiss : CustomCard
+    class LessMagnetDelay : CustomCard
     {
+        public static GameObject objectToSpawn = null;
+        public static CardInfo CardInfo;
+        public override void Callback()
+        {
+            gameObject.GetOrAddComponent<ClassNameMono>().className = MagnetClass.name;
+        }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
-            UnityEngine.Debug.Log($"[{BreadCards.ModInitials}][Card] {GetTitle()} has been setup.");
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            gunAmmo.maxAmmo -= 1;
-            gun.attackSpeed -= 0.9f;
-            gun.reloadTime += 5;
-            gun.damage *= 2f;
-            UnityEngine.Debug.Log($"[{BreadCards.ModInitials}][Card] {GetTitle()} has been added to player {player.playerID}.");
+            MagnetShot.magnetDelay -= 0.05f;
+            MagnetShot.magnetRange += 0.5f;
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            gunAmmo.maxAmmo += 1;
-            gun.damage /= 2;
-            UnityEngine.Debug.Log($"[{BreadCards.ModInitials}][Card] {GetTitle()} has been removed from player {player.playerID}.");
+            MagnetShot.magnetDelay += 0.05f;
+            MagnetShot.magnetRange -= 0.5f;
         }
-
         protected override string GetTitle()
         {
-            return "Hope I Don't miss";
+            return "Quick Magnets";
         }
         protected override string GetDescription()
         {
-            return "Missing is not an option";
+            return "";
         }
         protected override GameObject GetCardArt()
         {
@@ -44,7 +47,7 @@ namespace BreadCards.Cards
         }
         protected override CardInfo.Rarity GetRarity()
         {
-            return CardInfo.Rarity.Rare;
+            return CardInfo.Rarity.Common;
         }
         protected override CardInfoStat[] GetStats()
         {
@@ -53,36 +56,22 @@ namespace BreadCards.Cards
                 new CardInfoStat()
                 {
                     positive = true,
-                    stat = "Damage",
-                    amount = "x2",
-                    simepleAmount = CardInfoStat.SimpleAmount.aHugeAmountOf
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Ammo",
-                    amount = "-1",
+                    stat = "Magnet Delay",
+                    amount = "-0.05s",
                     simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 },
                 new CardInfoStat()
                 {
-                    positive = false,
-                    stat = "Reload Speed",
-                    amount = "+5s",
+                    positive = true,
+                    stat = "Magnet Range",
+                    amount = "+0.5m",
                     simepleAmount = CardInfoStat.SimpleAmount.notAssigned
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Attack Speed",
-                    amount = "-90%",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
                 }
             };
         }
         protected override CardThemeColor.CardThemeColorType GetTheme()
         {
-            return CardThemeColor.CardThemeColorType.FirepowerYellow;
+            return CardThemeColor.CardThemeColorType.TechWhite;
         }
         public override string GetModName()
         {
