@@ -1,3 +1,0 @@
-This is a mod for rounds that adds some settings and stuff...
-
-self note: finish this whenever
