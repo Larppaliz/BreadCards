@@ -1,12 +1,10 @@
-﻿using ModsPlus;
-using Photon.Pun;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.BulletMods
 {
     class StalkerBullets : CustomCard
     {
@@ -19,10 +17,9 @@ namespace BreadCards.Cards
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
+            gun.destroyBulletAfter += 999;
 
             GameObject obj = new GameObject("StaklerShotEffect", typeof(StalkerShotEffect));
-
-            StalkerShotEffect.ownerID = player.playerID;
 
             obj.GetComponent<StalkerShotEffect>();
 
@@ -39,19 +36,19 @@ namespace BreadCards.Cards
         }
         protected override string GetTitle()
         {
-            return "Stalker bullets";
+            return "Stalker Bullets";
         }
         protected override string GetDescription()
         {
-            return "Your bullets will home into enemies while the target is not looking in the bullets direction";
+            return "Your bullets will home into targets while they aren't looking";
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.StalkerArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {
-            return CardInfo.Rarity.Uncommon;
+            return CardInfo.Rarity.Rare;
         }
         protected override CardInfoStat[] GetStats()
         {
@@ -72,14 +69,13 @@ namespace BreadCards.Cards
 
     public class StalkerShotEffect : MonoBehaviour
     {
-        public static int ownerID;
 
         public Player owner;
 
         bool start = false;
 
         private MoveTransform moveTransform;
-        private PhotonView photonView;
+
 
         public void Awake()
         {
@@ -97,7 +93,7 @@ namespace BreadCards.Cards
             }
             this.ExecuteAfterSeconds(0.3f, () =>
             {
-                photonView = GetComponent<PhotonView>();
+
                 moveTransform = GetComponent<MoveTransform>();
                 start = true;
 
@@ -112,12 +108,13 @@ namespace BreadCards.Cards
         Player target = null;
         public void Update()
         {
+
+            if (GetComponent<SpawnedAttack>() != null) owner = GetComponent<SpawnedAttack>().spawner;
+
+            if (owner == null) return;
             if (!start) return;
 
-            if (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); return; }
 
-            if (photonView != null)
-            {
                 if (target == null || target.data.dead)
                 {
                     Player player = PlayerManager.instance.GetClosestPlayer(transform.position, true);
@@ -151,7 +148,7 @@ namespace BreadCards.Cards
                         }
                     }
                 }
-            }
+
         }
     }
 }

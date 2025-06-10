@@ -1,7 +1,7 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class UltraDefenseCopy : CustomCard
     {
@@ -19,17 +19,19 @@ namespace BreadCards.Cards
         {
         }
 
+        public override bool GetEnabled() => false;
+
         protected override string GetTitle()
         {
-            return "Ultra Defense Copy";
+            return "Ultra Defended";
         }
         protected override string GetDescription()
         {
-            return "";
+            return "Is it not nice to have friends?";
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.UltraDefendedArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {

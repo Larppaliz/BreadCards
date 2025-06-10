@@ -1,7 +1,4 @@
-﻿using ModsPlus;
-using Photon.Pun;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
@@ -9,9 +6,9 @@ using SimulationChamber;
 using HarmonyLib;
 using System;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.BulletMods
 {
-    class ProximityClusterBomb : CustomCard
+    class ClusterShots : CustomCard
     {
         public static GameObject objectToSpawn = null;
         public static CardInfo CardInfo;
@@ -19,24 +16,22 @@ namespace BreadCards.Cards
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             cardInfo.allowMultiple = false;
-            gun.damage = 0.3f;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
+            Type type = typeof(ClusterEffect);
 
-            GameObject obj = new GameObject("TestHomingEffect", typeof(ProximityClusterBombEffect));
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
 
-            obj.GetComponent<ProximityClusterBombEffect>();
+            GameObject obj = new GameObject("ClusterEffect", type);
 
-            ProximityClusterBombEffect.ownerID = player.playerID;
-
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
-
-                list.Add(new ObjectsToSpawn
-                {
-                    AddToProjectile = obj
-                });
-                gun.objectsToSpawn = list.ToArray();
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
+            {
+                AddToProjectile = obj
+            }).ToArray();
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -44,11 +39,11 @@ namespace BreadCards.Cards
         }
         protected override string GetTitle()
         {
-            return "Proximity Cluster Bomb Rounds";
+            return "Cluster Rounds";
         }
         protected override string GetDescription()
         {
-            return "Your bullets will explode into 6 to 12 bullets when near targets";
+            return "Your bullets will explode into multiple smaller bullets after 1s";
         }
         protected override GameObject GetCardArt()
         {
@@ -65,15 +60,15 @@ namespace BreadCards.Cards
                 new CardInfoStat()
                 {
                     positive = false,
-                    stat = "DMG",
-                    amount = "-70%",
+                    stat = "<color=#ffa648>Cluster</color> DMG",
+                    amount = "30%",
                     simepleAmount = CardInfoStat.SimpleAmount.aLittleBitOf
                 },
                                 new CardInfoStat()
                 {
                     positive = false,
-                    stat = "Cluster Range",
-                    amount = "-85%",
+                    stat = "<color=#ffa648>Cluster</color> Range",
+                    amount = "15%",
                     simepleAmount = CardInfoStat.SimpleAmount.aLittleBitOf
                 }
             };
@@ -89,74 +84,41 @@ namespace BreadCards.Cards
     }
 
 
-    public class ProximityClusterBombEffect : MonoBehaviour
+    public class ClusterEffect : MonoBehaviour
     {
-        public static int ownerID;
 
         public Player owner;
 
         private MoveTransform moveTransform;
-        private PhotonView photonView;
 
         public void Awake()
         {
             if (transform.parent != null)
             {
-                transform.parent.gameObject.AddComponent<ProximityClusterBombEffect>();
+                transform.parent.gameObject.AddComponent<ClusterEffect>();
                 return;
             }
             else
             {
-                foreach (var obj in GetComponentsInChildren<ProximityClusterBombEffect>().Where(bullet => bullet != this))
+                foreach (var obj in GetComponentsInChildren<ClusterEffect>().Where(bullet => bullet != this))
                 {
                     Destroy(obj.gameObject);
                 }
             }
+            if (owner == null && GetComponent<SpawnedAttack>() != null) { owner = GetComponent<SpawnedAttack>().spawner; this.ExecuteAfterSeconds(0.01f, () => Awake()); return; }
+
             this.ExecuteAfterSeconds(0.2f, () =>
             {
-                owner = PlayerManager.instance.GetPlayerWithID(ownerID);
-                photonView = GetComponent<PhotonView>();
                 moveTransform = GetComponent<MoveTransform>();
-                start = true;
 
-                this.ExecuteAfterSeconds(0.5f / owner.data.weaponHandler.gun.projectielSimulatonSpeed, () =>
+                this.ExecuteAfterSeconds(0.8f / owner.data.weaponHandler.gun.projectielSimulatonSpeed, () =>
                 {
-                    ownerDelay = false;
+                    Explode(moveTransform.velocity);
                 });
             });
         }
-
-        bool ownerDelay = true;
-        public void Update()
-        {
-            if (!start) return;
-
-            if (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); return; }
-
-            if (photonView != null)
-            {
-                Player player = PlayerManager.instance.GetClosestPlayer(transform.position, true);
-
-                if (player != null && !player.data.dead)
-                {
-                    if (player == owner && ownerDelay) return;
-
-                    if (BreadCards.Distance(transform.position, player.transform.position) < 7.5f)
-                    {
-                        Explode(BreadCards.DirectionTo(transform.position, player.transform.position) * 2f);
-                    }
-                }
-
-            }
-        }
-        bool start;
         public void Explode(Vector2 vel)
         {
-
-            if (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); return; }
-
-            if (photonView != null)
-            {
 
                 int bulletAmount = UnityEngine.Random.Range(6,12);
 
@@ -172,7 +134,7 @@ namespace BreadCards.Cards
 
                 foreach (ObjectsToSpawn obj in gun.objectsToSpawn)
                 {
-                    if (!obj.AddToProjectile.GetComponent<ProximityClusterBombEffect>())
+                    if (!obj.AddToProjectile.GetComponent<ClusterEffect>())
                     {
                         list.AddItem(obj);
                     }
@@ -180,20 +142,24 @@ namespace BreadCards.Cards
                 sgun.objectsToSpawn = list;
                 sgun.numberOfProjectiles = 1;
                 sgun.destroyBulletAfter *= 0.15f;
+                sgun.damage = 0.3f;
+
+                float pspd = sgun.projectileSpeed;
 
                 for (int i = 0; i < bulletAmount; i++)
                 {
                     Vector2 angle = BreadCards.RotatedBy(vel, 360/bulletAmount * i);
 
+                    sgun.projectileSpeed = pspd * UnityEngine.Random.Range(0.85f, 1.15f);
+
                     sgun.SimulatedAttack(owner.playerID, transform.position, angle, 1f, 1f);
                 }
 
 
-                foreach (var obj in GetComponentsInChildren<ProximityClusterBombEffect>().Where(bullet => bullet == this))
+                foreach (var obj in GetComponentsInChildren<ClusterEffect>().Where(bullet => bullet == this))
                 {
                     Destroy(obj.gameObject);
                 }
-            }
         }
     }
 }

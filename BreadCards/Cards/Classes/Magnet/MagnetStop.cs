@@ -1,16 +1,9 @@
 ﻿using ClassesManagerReborn.Util;
-using ModdingUtils.Extensions;
-using ModdingUtils.Utils;
-using Photon.Pun;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.Classes.Magnet
 {
     class MagnetStop : CustomCard
     {
@@ -26,13 +19,17 @@ namespace BreadCards.Cards
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            MagnetShot.magnetStop = true;
-            MagnetShot.magnetCD *= 0.65f;
+            MagnetData mData = MagnetShot.stats[player.playerID];
+
+            mData.magnetStop = true;
+            mData.magnetCD *= 0.65f;
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            MagnetShot.magnetStop = false;
-            MagnetShot.magnetCD /= 0.65f;
+            MagnetData mData = MagnetShot.stats[player.playerID];
+
+            mData.magnetStop = false;
+            mData.magnetCD /= 0.65f;
         }
         protected override string GetTitle()
         {
@@ -44,7 +41,7 @@ namespace BreadCards.Cards
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.MagnetArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {

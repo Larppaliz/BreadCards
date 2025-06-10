@@ -1,39 +1,49 @@
-﻿using ModdingUtils.Utils;
-using ModsPlus;
-using Photon.Pun;
-using RWF;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.BulletMods
 {
     class StaticBullets : CustomCard
     {
+        public static CardInfo CardInfo;
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
-            gun.damage = 2f;
+            CardInfo = cardInfo;
+            cardInfo.allowMultiple = true;
+            gun.damage = 1.5f;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
+            Type type = typeof(StaticShots);
 
-            GameObject obj = new GameObject("StaticShotss", typeof(StaticShots));
+            float defaultTime = 0.7f;
 
-            StaticShots.ownerID = player.playerID;
+            if (!StaticShots.time.ContainsKey(player.playerID)) StaticShots.time.Add(player.playerID, defaultTime);
+            else StaticShots.time[player.playerID] /= 2f;
 
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
-            list.Add(new ObjectsToSpawn
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
             {
-                AddToProjectile = obj
-            });
-            gun.objectsToSpawn = list.ToArray();
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
+
+            StaticShots.time[player.playerID] = defaultTime;
+
+            GameObject obj = new GameObject("StaticEffect", type);
+
+                gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
+                {
+                    AddToProjectile = obj
+                }).ToArray();
 
         }
+
+
+
+
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
         }
@@ -62,8 +72,8 @@ namespace BreadCards.Cards
                 {
                     positive = true,
                     stat = "DMG",
-                    amount = "+100%",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLittleBitOf
+                    amount = "+50%",
+                    simepleAmount = CardInfoStat.SimpleAmount.Some
                 }
             };
         }
@@ -79,13 +89,12 @@ namespace BreadCards.Cards
 
     public class StaticShots : MonoBehaviour
     {
-        public static int ownerID;
+
+        public static Dictionary<int, float> time = new Dictionary<int, float>();
 
         public Player owner;
 
         private MoveTransform moveTransform;
-        private PhotonView photonView;
-
         public void Awake()
         {
             if (transform.parent != null)
@@ -100,14 +109,24 @@ namespace BreadCards.Cards
                     Destroy(obj.gameObject);
                 }
             }
+            if (owner == null && GetComponent<SpawnedAttack>() != null) { owner = GetComponent<SpawnedAttack>().spawner; this.ExecuteAfterSeconds(0.01f, () => Awake()); return; }
             this.ExecuteAfterSeconds(0.01f, () =>
             {
-                photonView = GetComponent<PhotonView>();
+
+                int ownerID = owner.playerID;
+
+                print(ownerID);
+
+                float newtime = time[ownerID];
+
+                print(newtime);
+
                 moveTransform = GetComponent<MoveTransform>();
 
-                while (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); }
+                if (moveTransform == null) return;
 
-                this.ExecuteAfterSeconds(0.7f / owner.data.weaponHandler.gun.projectielSimulatonSpeed, () =>
+                this.ExecuteAfterSeconds(newtime / owner.data.weaponHandler.gun.projectielSimulatonSpeed, () =>
+                 
                 {
                     moveTransform.velocity *= 0.0001f;
                 });
@@ -118,4 +137,9 @@ namespace BreadCards.Cards
         {
         }
     }
+    public class MonoPlayerInitializer : MonoBehaviour
+    {
+        public Player player;
+    }
+
 }

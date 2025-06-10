@@ -1,22 +1,10 @@
-﻿using ModdingUtils.Extensions;
-using ModdingUtils.MonoBehaviours;
-using ModdingUtils.Utils;
-using ModsPlus;
-using Photon.Pun;
-using Photon.Pun.Simple;
-using Photon.Realtime;
-using RWF;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
-using static ModdingUtils.MonoBehaviours.CounterReversibleEffect;
-using static UnityEngine.UI.GridLayoutGroup;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.BulletMods
 {
     class BlockHoming : CustomCard
     {
@@ -34,17 +22,19 @@ namespace BreadCards.Cards
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
 
-            GameObject obj = new GameObject("BlockHomingEffect", typeof(BlockHomingEffect));
+            Type type = typeof(BlockHomingEffect);
 
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
 
-            BlockHomingEffect.ownerID = player.playerID;
+            GameObject obj = new GameObject("BlockHomingEffect", type);
 
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
-            list.Add(new ObjectsToSpawn
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
             {
                 AddToProjectile = obj
-            });
-            gun.objectsToSpawn = list.ToArray();
+            }).ToArray();
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -107,12 +97,9 @@ namespace BreadCards.Cards
     public class BlockHomingEffect : MonoBehaviour
     {
 
-        public static int ownerID;
-
         public Player owner;
 
         private MoveTransform moveTransform;
-        private PhotonView photonView;
         public void Awake()
         {
             if (transform.parent != null)
@@ -131,20 +118,19 @@ namespace BreadCards.Cards
             this.ExecuteAfterSeconds(0.01f, () =>
             {
                 start = true;
-                photonView = GetComponent<PhotonView>();
                 moveTransform = GetComponent<MoveTransform>();
-                owner = PlayerManager.instance.GetPlayerWithID(ownerID);
             });
         }
         bool start;
         public void Update()
         {
+            if (GetComponent<SpawnedAttack>() != null) owner = GetComponent<SpawnedAttack>().spawner;
+
+            if (owner == null) return;
             if (!start) return;
 
-            if (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); return; }
 
-            if (photonView != null)
-            {
+
                 float x = moveTransform.velocity.x;
                 if (x < 0) x *= -1f;
                 float y = moveTransform.velocity.y;
@@ -156,7 +142,6 @@ namespace BreadCards.Cards
                 {
                     Launch();
                 }
-            }
         }
         float backupMag;
 

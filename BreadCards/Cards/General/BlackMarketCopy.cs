@@ -1,43 +1,36 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
 
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
-using BreadCards;
-using System.Linq;
-
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class BlackMarketCopy : CustomCard
     {
         public static CardInfo CardInfo;
+        public override bool GetEnabled() => false;
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
-            enabled = false;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            BreadCards.instance.PlayerDrawsIncrease(player, 1);
+            LarrysMod.LarrysMod.instance.PlayerDrawsIncrease(player, 2);
 
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            BreadCards.instance.PlayerDrawsIncrease(player, -1);
+            LarrysMod.LarrysMod.instance.PlayerDrawsIncrease(player, 2);
         }
 
         protected override string GetTitle()
         {
-            return "Bad Black Market";
+            return "Black Market Benefits";
         }
         protected override string GetDescription()
         {
-            return "";
+            return "I wouldnt trust your friend over there.";
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.BadBlackMarketArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {
@@ -58,7 +51,7 @@ namespace BreadCards.Cards
         }
         protected override CardThemeColor.CardThemeColorType GetTheme()
         {
-            return CardThemeColor.CardThemeColorType.TechWhite;
+            return CardThemeColor.CardThemeColorType.EvilPurple;
         }
         public override string GetModName()
         {

@@ -1,21 +1,14 @@
-﻿using BreadCards.Cards.Classes.ZigZag;
-using ClassesManagerReborn;
+﻿using ClassesManagerReborn;
 using ClassesManagerReborn.Util;
-using ModsPlus;
-using Photon.Pun;
-using RWF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.Classes.ZigZag
 {
     class ZigZagBullets : CustomCard
     {
@@ -35,20 +28,22 @@ namespace BreadCards.Cards
 
             gun.gravity = 0f;
 
-            GameObject obj = new GameObject("ZigZagShotss", typeof(ZigZagShots));
+            if (!ZigZagShots.stats.ContainsKey(player.playerID)) ZigZagShots.stats.Add(player.playerID, new ZigZagData().resetData());
+            else ZigZagShots.stats[player.playerID].resetData();
 
-            ZigZagShots.ownerID = player.playerID;
+            Type type = typeof(ZigZagShots);
 
-            obj.GetComponent<ZigZagShots>();
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
 
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
-            list.Add(new ObjectsToSpawn
+            GameObject obj = new GameObject("ZigZagShotEffect", type);
+
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
             {
                 AddToProjectile = obj
-            });
-            gun.objectsToSpawn = list.ToArray();
-
-            ZigZagShots.resetData();
+            }).ToArray();
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -64,7 +59,7 @@ namespace BreadCards.Cards
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.ZigZagArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {
@@ -142,25 +137,32 @@ namespace BreadCards.Cards
         }
     }
 
-    public class ZigZagShots : MonoBehaviour
+    public class ZigZagData
     {
-        public static int ownerID;
+        public float startDelay;
+        public float delay;
+        public bool randomness;
 
-        public Player owner;
-
-        public static float startDelay;
-        public static float delay;
-        public static bool randomness;
-
-        private MoveTransform moveTransform;
-        private PhotonView photonView;
-
-        public static void resetData()
+        public ZigZagData resetData()
         {
             startDelay = 0.3f;
             delay = 0.2f;
             randomness = false;
+
+            return this;
         }
+    }
+    public class ZigZagShots : MonoBehaviour
+    {
+
+        public Player owner;
+
+        public static Dictionary<int, ZigZagData> stats = new Dictionary<int, ZigZagData>();
+        ZigZagData zData;
+
+        private MoveTransform moveTransform;
+
+
         public float angle;
         float timescale = 1f;
         public void Awake()
@@ -177,20 +179,21 @@ namespace BreadCards.Cards
                     Destroy(obj.gameObject);
                 }
             }
-            photonView = GetComponent<PhotonView>();
+
             moveTransform = GetComponent<MoveTransform>();
 
-            if (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); return; }
+            if (owner == null && GetComponent<SpawnedAttack>() != null) { owner = GetComponent<SpawnedAttack>().spawner; return; }
 
+            zData = stats[owner.playerID];
 
             if (owner != null) timescale = owner.data.weaponHandler.gun.projectielSimulatonSpeed;
 
-            this.ExecuteAfterSeconds(startDelay / timescale, () =>
+            this.ExecuteAfterSeconds(zData.startDelay / timescale, () =>
             {
 
                 angle = owner.data.weaponHandler.gun.spread * 360f;
 
-                if (randomness)
+                if (zData.randomness)
                 {
                     Spread();
                     return;
@@ -212,7 +215,7 @@ namespace BreadCards.Cards
         public void ZigZag1()
         {
             moveTransform.velocity = BreadCards.RotatedBy(moveTransform.velocity, angle);
-            this.ExecuteAfterSeconds(delay/timescale, () =>
+            this.ExecuteAfterSeconds(zData.delay /timescale, () =>
             {
                 ZigZag2();
             });
@@ -221,7 +224,7 @@ namespace BreadCards.Cards
         public void ZigZag2()
         {
             moveTransform.velocity = BreadCards.RotatedBy(moveTransform.velocity, angle *-1);
-            this.ExecuteAfterSeconds(delay/timescale, () =>
+            this.ExecuteAfterSeconds(zData.delay /timescale, () =>
             {
                 ZigZag1();
             });
@@ -232,7 +235,7 @@ namespace BreadCards.Cards
             float rangle = UnityEngine.Random.Range(angle * -0.5f, angle * 0.5f);
 
             moveTransform.velocity = BreadCards.RotatedBy(moveTransform.velocity, rangle);
-            this.ExecuteAfterSeconds(delay / timescale, () =>
+            this.ExecuteAfterSeconds(zData.delay / timescale, () =>
             {
                 Spread();
             });

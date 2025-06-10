@@ -1,11 +1,16 @@
-﻿using ModsPlus;
-using UnboundLib.Cards;
+﻿using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.Debuff
 {
     class BigMonkeAttack : CustomCard
     {
+        public static CardInfo CardInfo;
+        public override void Callback()
+        {
+            if (!BreadCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
+                BreadCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, _ => BigMonkeCurse.CardInfo);
+        }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             cardInfo.allowMultiple = false;
@@ -21,7 +26,7 @@ namespace BreadCards.Cards
                 {
                     CardInfo givenCard = BigMonkeCurse.CardInfo;
 
-                    ModdingUtils.Utils.Cards.instance.AddCardToPlayer(targetplayer, givenCard, false, givenCard.GetAbbreviation(), 0, 0);
+                    ModdingUtils.Utils.Cards.instance.AddCardToPlayer(targetplayer, givenCard, false, "", 0, 0);
                     ModdingUtils.Utils.CardBarUtils.instance.ShowAtEndOfPhase(player, givenCard);
                 }
 
@@ -37,7 +42,7 @@ namespace BreadCards.Cards
         }
         protected override string GetDescription()
         {
-            return "";
+            return "All <color=#ff0000>Enemies</color> get a <color=#e362f7>Big Monke</color> card";
         }
         protected override GameObject GetCardArt()
         {
@@ -57,41 +62,6 @@ namespace BreadCards.Cards
                     stat = "Percentage Damage",
                     amount = "+3",
                     simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
-                 new CardInfoStat()
-                {
-                    positive = false,
-                    stat = " ",
-                    amount = " ",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Get",
-                    amount = "Enemies",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
-                new CardInfoStat()
-                {
-                    positive = true,
-                    stat = "Health",
-                    amount = "+20%",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Size",
-                    amount = "+30%",
-                    simepleAmount = CardInfoStat.SimpleAmount.lower
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Movement Speed",
-                    amount = "-15%",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
                 }
             };
         }

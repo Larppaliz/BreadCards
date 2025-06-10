@@ -1,16 +1,9 @@
 ﻿using ClassesManagerReborn.Util;
-using ModdingUtils.Extensions;
-using ModdingUtils.Utils;
-using Photon.Pun;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.Classes.Magnet
 {
     class LessMagnetCooldown : CustomCard
     {
@@ -25,13 +18,17 @@ namespace BreadCards.Cards
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            MagnetShot.magnetCD -= 0.3f;
-            MagnetShot.magnetDelay *= 1.1f;
+            MagnetData mData = MagnetShot.stats[player.playerID];
+
+            mData.magnetCD -= 0.3f;
+            mData.magnetDelay *= 1.1f;
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            MagnetShot.magnetCD += 0.3f;
-            MagnetShot.magnetDelay /= 1.1f;
+            MagnetData mData = MagnetShot.stats[player.playerID];
+
+            mData.magnetCD += 0.3f;
+            mData.magnetDelay /= 1.1f;
         }
         protected override string GetTitle()
         {
@@ -43,7 +40,7 @@ namespace BreadCards.Cards
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.MagnetArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {

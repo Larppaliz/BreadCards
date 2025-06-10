@@ -1,17 +1,7 @@
-﻿using Photon.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using UnboundLib;
-using UnboundLib.Cards;
-using UnboundLib.Utils;
+﻿using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class BoosterPack : CustomCard
     {

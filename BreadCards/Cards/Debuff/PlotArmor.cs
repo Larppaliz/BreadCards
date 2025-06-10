@@ -1,28 +1,35 @@
-﻿using ClassesManagerReborn.Util;
-using UnboundLib;
-using UnboundLib.Cards;
+﻿using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards.Classes.ZigZag
+namespace BreadCards.Cards.Debuff
 {
-    class LightspeedZigZag : CustomCard
+    class PlotArmor : CustomCard
     {
         public static CardInfo CardInfo;
-
         public override void Callback()
         {
-            gameObject.GetOrAddComponent<ClassNameMono>().className = ZigZagsClass.name;
+            if (!BreadCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
+                BreadCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, _ => CurseofTheTroopers.CardInfo);
         }
-
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
-            gun.projectileSpeed = 2f;
+            cardInfo.allowMultiple = false;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            ZigZagData zData = ZigZagShots.stats[player.playerID];
+            gun.spread = 0;
+            data.maxHealth += 40f;
+            for (int i = 0; i < PlayerManager.instance.players.Count; i++)
+            {
+                Player targetplayer = PlayerManager.instance.players[i];
+                if (targetplayer.teamID != player.teamID)
+                {
+                    CardInfo givenCard = CurseofTheTroopers.CardInfo;
 
-            zData.delay = 0.05f;
+                    ModdingUtils.Utils.Cards.instance.AddCardToPlayer(targetplayer, givenCard, false, "", 0, 0);
+                    ModdingUtils.Utils.CardBarUtils.instance.ShowAtEndOfPhase(player, givenCard);
+                }
+            }
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -30,15 +37,15 @@ namespace BreadCards.Cards.Classes.ZigZag
 
         protected override string GetTitle()
         {
-            return "Lightspeed Zig Zag";
+            return "Plot Armor";
         }
         protected override string GetDescription()
         {
-            return "";
+            return "All <color=#ff0000>Enemies</color> get a <color=#e362f7>Curse of The Troopers</color> card";
         }
         protected override GameObject GetCardArt()
         {
-            return Assets.ZigZagArt;
+            return null;
         }
         protected override CardInfo.Rarity GetRarity()
         {
@@ -51,22 +58,22 @@ namespace BreadCards.Cards.Classes.ZigZag
                 new CardInfoStat()
                 {
                     positive = true,
-                    stat = "Zig Zag Delay",
-                    amount = "0.05s",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLittleBitOf
+                    stat = "Health",
+                    amount = "+40",
+                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
                 },
-                new CardInfoStat()
+                                new CardInfoStat()
                 {
                     positive = true,
-                    stat = "Bullet Speed",
-                    amount = "+100%",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLittleBitOf
+                    stat = "Spread",
+                    amount = "Reset",
+                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
                 }
             };
         }
         protected override CardThemeColor.CardThemeColorType GetTheme()
         {
-            return CardThemeColor.CardThemeColorType.FirepowerYellow;
+            return CardThemeColor.CardThemeColorType.EvilPurple;
         }
         public override string GetModName()
         {

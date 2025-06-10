@@ -1,15 +1,16 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
 
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
-
-namespace BreadCards.Cards
+namespace BreadCards.Cards.Debuff
 {
-    class BouncySolution : CustomCard
+    class BounceSabotage : CustomCard
     {
+        public static CardInfo CardInfo;
+        public override void Callback()
+        {
+            if (!BreadCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
+                BreadCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, _ => BounceCurse.CardInfo);
+        }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             gun.damage = 1.5f;
@@ -23,9 +24,9 @@ namespace BreadCards.Cards
                 Player targetplayer = PlayerManager.instance.players[i];
                 if (targetplayer.teamID != player.teamID)
                 {
-                    CardInfo givenCard = Bounce.CardInfo;
+                    CardInfo givenCard = BounceCurse.CardInfo;
 
-                    ModdingUtils.Utils.Cards.instance.AddCardToPlayer(targetplayer, givenCard, false, givenCard.GetAbbreviation(), 0, 0);
+                    ModdingUtils.Utils.Cards.instance.AddCardToPlayer(targetplayer, givenCard, false, "", 0, 0);
                     ModdingUtils.Utils.CardBarUtils.instance.ShowAtEndOfPhase(player, givenCard);
                 }
             }
@@ -40,7 +41,7 @@ namespace BreadCards.Cards
         }
         protected override string GetDescription()
         {
-            return "";
+            return "All <color=#ff0000>Enemies</color> get a <color=#e362f7>Bounce Solution</color> card";
         }
         protected override GameObject GetCardArt()
         {
@@ -66,34 +67,6 @@ namespace BreadCards.Cards
                     positive = true,
                     stat = "Bounces",
                     amount = "Reset",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
-                 new CardInfoStat()
-                {
-                    positive = false,
-                    stat = " ",
-                    amount = " ",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Get",
-                    amount = "Enemies",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
-                new CardInfoStat()
-                {
-                    positive = true,
-                    stat = "Bounces",
-                    amount = "+2",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "DMG",
-                    amount = "-25%",
                     simepleAmount = CardInfoStat.SimpleAmount.aLotOf
                 }
             };

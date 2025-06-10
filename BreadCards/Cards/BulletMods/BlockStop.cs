@@ -1,18 +1,10 @@
-﻿using ModdingUtils.Utils;
-using ModsPlus;
-using Photon.Pun;
-using Photon.Pun.Simple;
-using RWF;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
-using static UnityEngine.UI.GridLayoutGroup;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.BulletMods
 {
     class BlockStop : CustomCard
     {
@@ -27,17 +19,19 @@ namespace BreadCards.Cards
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
+            Type type = typeof(BlockStopEffect);
 
-            GameObject obj = new GameObject("BlockStopEffect", typeof(BlockStopEffect));
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
 
-            BlockStopEffect.ownerID = player.playerID;
+            GameObject obj = new GameObject("BlockStopEffect", type);
 
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
-            list.Add(new ObjectsToSpawn
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
             {
                 AddToProjectile = obj
-            });
-            gun.objectsToSpawn = list.ToArray();
+            }).ToArray();
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -86,14 +80,11 @@ namespace BreadCards.Cards
     public class BlockStopEffect : MonoBehaviour
     {
 
-        public static int ownerID;
-
         public Player owner;
 
         bool start;
 
         private MoveTransform moveTransform;
-        private PhotonView photonView;
         public void Awake()
         {
             if (transform.parent != null)
@@ -113,19 +104,18 @@ namespace BreadCards.Cards
             this.ExecuteAfterSeconds(0.01f, () =>
             {
                 start = true;
-                photonView = GetComponent<PhotonView>();
                 moveTransform = GetComponent<MoveTransform>();
-                owner = PlayerManager.instance.GetPlayerWithID(ownerID);
             });
         }
         public void Update()
         {
+            if (GetComponent<SpawnedAttack>() != null) owner = GetComponent<SpawnedAttack>().spawner;
+
+            if (owner == null) return;
+
             if (!start) return;
 
-            if (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); return; }
 
-            if (photonView != null)
-            {
                 if (owner != null)
                 {
                     if (owner.data.block.sinceBlock == 0)
@@ -133,7 +123,7 @@ namespace BreadCards.Cards
                         moveTransform.velocity *= 0.0001f;
                     }
                 }
-            }
+
         }
     }
 }

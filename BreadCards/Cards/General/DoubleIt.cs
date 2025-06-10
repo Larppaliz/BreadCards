@@ -1,43 +1,56 @@
-﻿using Photon.Utilities;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using UnboundLib;
-using UnboundLib.Cards;
-using UnboundLib.GameModes;
-using UnboundLib.Utils;
+﻿using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class DoubleIt : CustomCard
     {
+        public static CardInfo CardInfo;
+        public override void Callback()
+        {
+            if (!BreadCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
+                BreadCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, _ => GiveItToMeLater.CardInfo);
+        }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             cardInfo.allowMultiple = false;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            player.gameObject.AddComponent<DualPickEffect>();
+            BreadCards_CardChoicesPatch.AddForcedCardChoice(player, new ForcedCardRequest
+            {
+                card = GiveItToMeLater.CardInfo,
+                slot = 0,
+                fill = true,
+                reverse = true,
+                condition = (player) =>
+                {
+                    return !player.gameObject.GetComponent<DualPickEffect>();
+                }
+            });
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            BoosterPackEffect effect = player.gameObject.GetComponent<BoosterPackEffect>();
-            Destroy(effect);
+            BreadCards_CardChoicesPatch.AddForcedCardChoice(player, new ForcedCardRequest
+            {
+                card = GiveItToMeLater.CardInfo,
+                slot = 0,
+                fill = true,
+                reverse = true,
+                condition = (player) =>
+                {
+                    return !player.gameObject.GetComponent<DualPickEffect>();
+                }
+            });
         }
 
         protected override string GetTitle()
         {
-            return "Double it and give it to me later";
+            return "Double it & Give it to me later";
         }
         protected override string GetDescription()
         {
-            return "On end of the next pick phase you get a clone of your newest card (usually the one you picked)";
+            return "Adds a <color=#62f2f7>GIVE IT TO ME LATER</color> card to your draws";
         }
         protected override GameObject GetCardArt()
         {
@@ -62,18 +75,5 @@ namespace BreadCards.Cards
             return BreadCards.ModInitials;
         }
     }
-    public class DualPickEffect : MonoBehaviour
-    {
-        public Player player;
-        public CardInfo card;
-        public void Start()
-        {
-            GameModeManager.AddOnceHook(GameModeHooks.HookPickStart, BreadCards.instance.PrepareDoubleCardPick);
-           
-            player = gameObject.GetComponentInParent<Player>();
-        }
-
-    }
-
 
 }

@@ -1,17 +1,10 @@
-﻿using ModdingUtils.Utils;
-using ModsPlus;
-using Photon.Pun;
-using RWF;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.BulletMods
 {
     class HoppingBullets : CustomCard
     {
@@ -23,17 +16,19 @@ namespace BreadCards.Cards
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            GameObject obj = new GameObject("HopShotss", typeof(HopShots));
+            Type type = typeof(HopShots);
 
-            HopShots.ownerID = player.playerID;
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
 
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
+            GameObject obj = new GameObject("HopShotEffect", type);
 
-            list.Add(new ObjectsToSpawn
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
             {
                 AddToProjectile = obj
-            });
-            gun.objectsToSpawn = list.ToArray();
+            }).ToArray();
 
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
@@ -81,12 +76,10 @@ namespace BreadCards.Cards
 
     public class HopShots : MonoBehaviour
     {
-        public static int ownerID;
 
         public Player owner;
 
         private MoveTransform moveTransform;
-        private PhotonView photonView;
 
         public void Awake()
         {
@@ -104,9 +97,9 @@ namespace BreadCards.Cards
             }
             this.ExecuteAfterSeconds(0.01f, () =>
             {
-                photonView = GetComponent<PhotonView>();
+
                 moveTransform = GetComponent<MoveTransform>();
-                while (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); }
+                while (owner == null) { owner = GetComponent<SpawnedAttack>().spawner; }
 
                 this.ExecuteAfterSeconds(0.3f, () =>
                 {
@@ -122,8 +115,6 @@ namespace BreadCards.Cards
         {
             if (!start) return;
 
-            if (photonView != null)
-            {
 
                 float tolerance = 0.8f;
 
@@ -149,7 +140,6 @@ namespace BreadCards.Cards
                         delay[1] = true;
                     }
                 }
-            }
         }
 
         void Undelay(int id)

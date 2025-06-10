@@ -1,12 +1,4 @@
-﻿using ClassesManagerReborn;
-using ClassesManagerReborn.Util;
-using Photon.Pun;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ClassesManagerReborn.Util;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
@@ -27,13 +19,17 @@ namespace BreadCards.Cards.Classes.ZigZag
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            ZigZagShots.delay -= 0.1f;
-            ZigZagShots.startDelay -= 0.1f;
+            ZigZagData zData = ZigZagShots.stats[player.playerID];
+
+            zData.delay -= 0.1f;
+            zData.startDelay -= 0.1f;
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            ZigZagShots.delay += 0.1f;
-            ZigZagShots.startDelay += 0.1f;
+            ZigZagData zData = ZigZagShots.stats[player.playerID];
+
+            zData.delay += 0.1f;
+            zData.startDelay += 0.1f;
         }
 
         protected override string GetTitle()
@@ -46,7 +42,7 @@ namespace BreadCards.Cards.Classes.ZigZag
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.ZigZagArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {

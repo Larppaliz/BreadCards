@@ -1,6 +1,4 @@
-﻿using ModsPlus;
-using Photon.Pun;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnboundLib;
 using UnboundLib.Cards;
@@ -8,8 +6,9 @@ using UnityEngine;
 using SimulationChamber;
 using HarmonyLib;
 using System;
+using Photon.Pun;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.BulletMods
 {
     class SplitShot : CustomCard
     {
@@ -22,20 +21,26 @@ namespace BreadCards.Cards
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
+            Type type = typeof(SplittinRoundEffect);
 
-            GameObject obj = new GameObject("TestHomingEffect", typeof(SplittinRoundEffect));
+            int defaultBullets = 2;
 
-            obj.GetComponent<SplittinRoundEffect>();
+            if (!SplittinRoundEffect.bulletAmounts.ContainsKey(player.playerID)) SplittinRoundEffect.bulletAmounts.Add(player.playerID, defaultBullets);
+            else SplittinRoundEffect.bulletAmounts[player.playerID]++;
 
-            SplittinRoundEffect.ownerID = player.playerID;
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
 
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
+            SplittinRoundEffect.bulletAmounts[player.playerID] = defaultBullets;
 
-                list.Add(new ObjectsToSpawn
-                {
-                    AddToProjectile = obj
-                });
-                gun.objectsToSpawn = list.ToArray();
+            GameObject obj = new GameObject("SplittinRoundEffect", type);
+
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
+            {
+                AddToProjectile = obj
+            }).ToArray();
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -83,9 +88,10 @@ namespace BreadCards.Cards
 
     public class SplittinRoundEffect : MonoBehaviour
     {
-        public static int ownerID;
 
         public Player owner;
+
+        public static Dictionary<int, int> bulletAmounts = new Dictionary<int, int>();
 
         private MoveTransform moveTransform;
         private PhotonView photonView;
@@ -104,20 +110,21 @@ namespace BreadCards.Cards
                     Destroy(obj.gameObject);
                 }
             }
-            owner = PlayerManager.instance.GetPlayerWithID(ownerID);
+            if (owner == null && GetComponent<SpawnedAttack>() != null) { owner = GetComponent<SpawnedAttack>().spawner; this.ExecuteAfterSeconds(0.01f, () => Awake()); return; }
+
+            photonView = GetComponent<PhotonView>();
+            moveTransform = GetComponent<MoveTransform>();
 
             this.ExecuteAfterSeconds(0.5f / owner.data.weaponHandler.gun.projectielSimulatonSpeed, () =>
             {
                 Explode();
             });
 
-            photonView = GetComponent<PhotonView>();
-            moveTransform = GetComponent<MoveTransform>();
         }
         public void Explode()
         {
 
-            if (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); return; }
+            if (owner == null && GetComponent<SpawnedAttack>() != null) { owner = GetComponent<SpawnedAttack>().spawner; return; }
 
             if (photonView != null)
             {
@@ -125,7 +132,7 @@ namespace BreadCards.Cards
 
                 Vector2 vel = new Vector2(0, 2f);
 
-                int bulletAmount = 2;
+                int bulletAmount = bulletAmounts[owner.playerID];
 
                 Gun gun = owner.data.weaponHandler.gun;
                 SimulatedGun sgun = new GameObject("ClusterGun").AddComponent<SimulatedGun>();
@@ -144,16 +151,21 @@ namespace BreadCards.Cards
                         list.AddItem(obj);
                     }
                 }
+
                 sgun.objectsToSpawn = list;
                 sgun.numberOfProjectiles = 1;
 
-                Vector2 angle = BreadCards.RotatedBy(moveTransform.velocity, -18f);
+                float maxAngle = 45f;
 
-                sgun.SimulatedAttack(owner.playerID, transform.position, angle, 1f, 1f);
+                for (int i = 0; i < bulletAmount; i++)
+                {
+                    float angleOffset = Mathf.Lerp(-maxAngle/2, maxAngle/2, (float)i / (bulletAmount - 1));
 
-                angle = BreadCards.RotatedBy(moveTransform.velocity, 18f);
+                    Vector2 angle = BreadCards.RotatedBy(moveTransform.velocity, angleOffset);
 
-                sgun.SimulatedAttack(owner.playerID, transform.position, angle, 1f, 1f);
+                    sgun.SimulatedAttack(owner.playerID, transform.position, angle, 1f, 1f);
+
+                }
 
 
                 foreach (var obj in GetComponentsInChildren<SplittinRoundEffect>().Where(bullet => bullet == this))

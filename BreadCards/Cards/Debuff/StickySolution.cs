@@ -1,33 +1,23 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
 
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
-
 namespace BreadCards.Cards.Debuff
 {
     class StickySolution : CustomCard
     {
+        public static CardInfo CardInfo { get; internal set; }
+
+        public override bool GetEnabled() => false;
+
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
-            gun.damage = 1.50f;
-            cardInfo.allowMultiple = false;
+            enabled = false;
+            gun.damage = 1.35f;
+            cardInfo.enabled = false;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            for (int i = 0; i < PlayerManager.instance.players.Count; i++)
-            {
-                Player targetplayer = PlayerManager.instance.players[i];
-                if (targetplayer.teamID != player.teamID)
-                {
-                    CardInfo givenCard = Sticky.CardInfo;
-
-                    ModdingUtils.Utils.Cards.instance.AddCardToPlayer(targetplayer, givenCard, false, givenCard.GetAbbreviation(), 0, 0);
-                    ModdingUtils.Utils.CardBarUtils.instance.ShowAtEndOfPhase(player, givenCard);
-                }
-            }
+            if (gun.reflects > 0) gun.reflects /= 2;
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -35,7 +25,7 @@ namespace BreadCards.Cards.Debuff
 
         protected override string GetTitle()
         {
-            return "Sticky Sabotage";
+            return "Sticky Solution";
         }
         protected override string GetDescription()
         {
@@ -47,19 +37,12 @@ namespace BreadCards.Cards.Debuff
         }
         protected override CardInfo.Rarity GetRarity()
         {
-            return CardInfo.Rarity.Uncommon;
+            return CardInfo.Rarity.Common;
         }
         protected override CardInfoStat[] GetStats()
         {
             return new CardInfoStat[]
             {
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Get",
-                    amount = "Enemies",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
                 new CardInfoStat()
                 {
                     positive = true,

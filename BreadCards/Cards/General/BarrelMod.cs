@@ -1,16 +1,7 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
 
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
-using BreadCards;
-using System.Linq;
-using System.Collections.Generic;
-using UnboundLib;
-
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class BarrelMod : CustomCard
     {

@@ -1,17 +1,16 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
 
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
-using BreadCards;
-using System.Linq;
-
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class MultiplyingSlime : CustomCard
     {
+        public static CardInfo CardInfo;
+        public override void Callback()
+        {
+            if (!BreadCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
+                BreadCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, _ => MultipliedSlime.CardInfo);
+        }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             gun.damage = 1.2f;
@@ -37,7 +36,7 @@ namespace BreadCards.Cards
         }
         protected override string GetDescription()
         {
-            return "has a chance to give you a 'Multiplied Slime' card at the end of every round";
+            return "Can generate a <color=#ff00f4>Multiplied Slime</color> card at the end of every round";
         }
         protected override GameObject GetCardArt()
         {
@@ -54,7 +53,7 @@ namespace BreadCards.Cards
                  new CardInfoStat()
                 {
                     positive = true,
-                    stat = "Copy Chance",
+                    stat = "Slime Chance",
                     amount = "+35%",
                     simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 },

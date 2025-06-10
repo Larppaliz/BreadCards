@@ -1,15 +1,16 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
 
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
-
-namespace BreadCards.Cards
+namespace BreadCards.Cards.Debuff
 {
     class TrueEvil : CustomCard
     {
+        public static CardInfo CardInfo;
+        public override void Callback()
+        {
+            if (!BreadCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
+                BreadCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, _ => EvilCurse.CardInfo);
+        }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             cardInfo.allowMultiple = false;
@@ -23,7 +24,7 @@ namespace BreadCards.Cards
                 {
                     CardInfo givenCard = EvilCurse.CardInfo;
 
-                    ModdingUtils.Utils.Cards.instance.AddCardToPlayer(targetplayer, givenCard, false, givenCard.GetAbbreviation(), 0, 0);
+                    ModdingUtils.Utils.Cards.instance.AddCardToPlayer(targetplayer, givenCard, false, "", 0, 0);
                     ModdingUtils.Utils.CardBarUtils.instance.ShowAtEndOfPhase(player, givenCard);
                 }
             }
@@ -38,7 +39,7 @@ namespace BreadCards.Cards
         }
         protected override string GetDescription()
         {
-            return "";
+            return "All <color=#ff0000>Enemies</color> get a <color=#e362f7>Evil Curse</color> card";
         }
         protected override GameObject GetCardArt()
         {
@@ -52,41 +53,6 @@ namespace BreadCards.Cards
         {
             return new CardInfoStat[]
             {
-                                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Get",
-                    amount = "Enemies",
-                    simepleAmount = CardInfoStat.SimpleAmount.Some
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "DMG",
-                    amount = "-20%",
-                    simepleAmount = CardInfoStat.SimpleAmount.Some
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Health",
-                    amount = "-35",
-                    simepleAmount = CardInfoStat.SimpleAmount.notAssigned
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Block Cooldown",
-                    amount = "+0.5s",
-                    simepleAmount = CardInfoStat.SimpleAmount.Some
-                },
-                                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Bullets",
-                    amount = "Blockable",
-                    simepleAmount = CardInfoStat.SimpleAmount.Some
-                }
             };
         }
         protected override CardThemeColor.CardThemeColorType GetTheme()

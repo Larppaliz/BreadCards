@@ -1,18 +1,9 @@
-﻿using ModdingUtils.MonoBehaviours;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnboundLib;
-using UnboundLib.Cards;
+﻿using UnboundLib.Cards;
 using UnityEngine;
-using HarmonyLib;
-using System.Reflection;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
-    class NoBounces : CustomCard
+    class AnvilCard : CustomCard
     {
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
@@ -30,15 +21,15 @@ namespace BreadCards.Cards
 
         protected override string GetTitle()
         {
-            return "Biggest Bullet";
+            return "Anvil Bullets";
         }
         protected override string GetDescription()
         {
-            return "";
+            return "Almost as heavy as...";
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.AnvilArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {
@@ -80,7 +71,7 @@ namespace BreadCards.Cards
         }
         protected override CardThemeColor.CardThemeColorType GetTheme()
         {
-            return CardThemeColor.CardThemeColorType.TechWhite;
+            return CardThemeColor.CardThemeColorType.FirepowerYellow;
         }
         public override string GetModName()
         {

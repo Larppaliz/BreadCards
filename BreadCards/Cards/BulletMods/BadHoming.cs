@@ -1,18 +1,10 @@
-﻿using ModdingUtils.Utils;
-using ModsPlus;
-using Photon.Pun;
-using Photon.Pun.Simple;
-using RWF;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
-using static UnityEngine.UI.GridLayoutGroup;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.BulletMods
 {
     class BadHoming : CustomCard
     {
@@ -22,24 +14,22 @@ namespace BreadCards.Cards
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             cardInfo.allowMultiple = false;
-
-            gun.damage = 0.5f;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
+            Type type = typeof(BadHomingEffect);
 
-            GameObject obj = new GameObject("BadHomingEffect", typeof(BadHomingEffect));
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
 
-            obj.GetComponent<BadHomingEffect>();
+            GameObject obj = new GameObject("BadHomingEffect", type);
 
-            BadHomingEffect.ownerID = player.playerID;
-
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
-            list.Add(new ObjectsToSpawn
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
             {
                 AddToProjectile = obj
-            });
-            gun.objectsToSpawn = list.ToArray();
+            }).ToArray();
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -51,7 +41,7 @@ namespace BreadCards.Cards
         }
         protected override string GetDescription()
         {
-            return "Your bullets will attempt to home into enemies";
+            return "Your bullets will attempt to home into <color=#ff0000>Enemies</color>...\n Doesn't do that well on its own.";
         }
         protected override GameObject GetCardArt()
         {
@@ -65,13 +55,6 @@ namespace BreadCards.Cards
         {
             return new CardInfoStat[]
             {
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "DMG",
-                    amount = "-50%",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLittleBitOf
-                }
             };
         }
         protected override CardThemeColor.CardThemeColorType GetTheme()
@@ -87,7 +70,6 @@ namespace BreadCards.Cards
 
     public class BadHomingEffect : MonoBehaviour
     {
-        public static int ownerID;
 
         public Player owner;
 
@@ -95,7 +77,6 @@ namespace BreadCards.Cards
         bool ownerDelay = true;
 
         private MoveTransform moveTransform;
-        private PhotonView photonView;
 
         public void Awake()
         {
@@ -111,7 +92,7 @@ namespace BreadCards.Cards
                     Destroy(obj.gameObject);
                 }
             }
-            owner = PlayerManager.instance.GetPlayerWithID(ownerID);
+            if (owner == null && GetComponent<SpawnedAttack>() != null) { owner = GetComponent<SpawnedAttack>().spawner; this.ExecuteAfterSeconds(0.01f, () => Awake()); return; }
             this.ExecuteAfterSeconds(0.4f / owner.data.weaponHandler.gun.projectielSimulatonSpeed, () =>
             {
                 start = true;
@@ -121,31 +102,32 @@ namespace BreadCards.Cards
                 });
             });
 
-            photonView = GetComponent<PhotonView>();
             moveTransform = GetComponent<MoveTransform>();
         }
         bool ownerdelay = true;
         public void Update()
         {
+
+            if (GetComponent<SpawnedAttack>() != null) owner = GetComponent<SpawnedAttack>().spawner;
+
+            if (owner == null) return;
+
             if (!start) return;
 
-            if (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); return; }
 
-            if (photonView != null)
-            {
                 Player player = PlayerManager.instance.GetClosestPlayer(transform.position, true);
 
                 if (player != null)
                 {
                     if (player == owner && ownerdelay) return;
 
-                    if (BreadCards.Distance(transform.position, player.transform.position) < 17.5f)
+                    if (BreadCards.Distance(transform.position, player.transform.position) < 20f)
                     {
                         Vector2 vel = BreadCards.Normalize(player.transform.position - transform.position);
-                        moveTransform.velocity += new Vector3(vel.x, vel.y, 0f) * owner.data.weaponHandler.gun.projectielSimulatonSpeed;
+                        moveTransform.velocity += new Vector3(vel.x, vel.y, 0f) * owner.data.weaponHandler.gun.projectielSimulatonSpeed * 1.25f;
                     }
                 }
-            }
+
         }
     }
 }

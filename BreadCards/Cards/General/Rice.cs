@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnboundLib;
-using UnboundLib.Cards;
+﻿using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
 
     class Rice : CustomCard
@@ -18,8 +12,7 @@ namespace BreadCards.Cards
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             cardInfo.enabled = false;
-            gun.damage = 1.15f;
-            statModifiers.health = 1.15f;
+            statModifiers.health = 1.2f;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -31,11 +24,11 @@ namespace BreadCards.Cards
 
         protected override string GetTitle()
         {
-            return "Rice";
+            return "RICE";
         }
         protected override string GetDescription()
         {
-            return "Have some rice for your efforts";
+            return "Why am i still hungry?";
         }
         protected override GameObject GetCardArt()
         {
@@ -54,14 +47,7 @@ namespace BreadCards.Cards
                 {
                     positive = true,
                     stat = "Health",
-                    amount = "+15%",
-                    simepleAmount = CardInfoStat.SimpleAmount.Some
-                },
-                new CardInfoStat()
-                {
-                    positive = true,
-                    stat = "DMG",
-                    amount = "+15%",
+                    amount = "+20%",
                     simepleAmount = CardInfoStat.SimpleAmount.Some
                 }
             };

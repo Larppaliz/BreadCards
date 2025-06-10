@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnboundLib;
-using UnboundLib.Cards;
+﻿using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.Debuff
 {
     class BigMonkeCurse : CustomCard
     {
@@ -35,7 +29,7 @@ namespace BreadCards.Cards
         }
         protected override string GetDescription()
         {
-            return "Added by Big Monke Attack";
+            return "";
         }
         protected override GameObject GetCardArt()
         {

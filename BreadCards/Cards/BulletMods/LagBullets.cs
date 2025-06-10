@@ -1,18 +1,11 @@
-﻿using ModdingUtils.Utils;
-using ModsPlus;
-using Photon.Pun;
-using Photon.Pun.Simple;
-using RWF;
+﻿using Photon.Pun;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
-using static UnityEngine.UI.GridLayoutGroup;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.BulletMods
 {
     class LagBullets : CustomCard
     {
@@ -27,17 +20,20 @@ namespace BreadCards.Cards
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
+            Type type = typeof(LagBulletsEffect);
 
-            GameObject obj = new GameObject("LagBulletEffect", typeof(LagBulletsEffect));
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
 
-            LagBulletsEffect.ownerID = player.playerID;
+            GameObject obj = new GameObject("LagEffect", type);
 
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
-            list.Add(new ObjectsToSpawn
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
             {
                 AddToProjectile = obj
-            });
-            gun.objectsToSpawn = list.ToArray();
+            }).ToArray();
+
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -86,8 +82,6 @@ namespace BreadCards.Cards
     public class LagBulletsEffect : MonoBehaviour
     {
 
-        public static int ownerID;
-
         public Player owner;
 
         bool start;
@@ -108,14 +102,13 @@ namespace BreadCards.Cards
                     Destroy(obj.gameObject);
                 }
             }
-
+            if (owner == null && GetComponent<SpawnedAttack>() != null) { owner = GetComponent<SpawnedAttack>().spawner; this.ExecuteAfterSeconds(0.01f, () => Awake()); return; }
 
             this.ExecuteAfterSeconds(0.01f, () =>
             {
                 start = true;
                 photonView = GetComponent<PhotonView>();
                 moveTransform = GetComponent<MoveTransform>();
-                owner = PlayerManager.instance.GetPlayerWithID(ownerID);
 
                 if (photonView != null && moveTransform != null)
                 {

@@ -1,34 +1,21 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
 
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
-
-namespace BreadCards.Cards
+namespace BreadCards.Cards.Debuff
 {
-    class CurseOfTheTroopers : CustomCard
+    class CurseofTheTroopers : CustomCard
     {
+        public static CardInfo CardInfo { get; internal set; }
+
+        public override bool GetEnabled() => false;
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
-            cardInfo.allowMultiple = false;
+            enabled = false;
+            cardInfo.enabled = false;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            gun.spread = 0;
-            data.maxHealth += 40f;
-            for (int i = 0; i < PlayerManager.instance.players.Count; i++)
-            {
-                Player targetplayer = PlayerManager.instance.players[i];
-                if (targetplayer.teamID != player.teamID)
-                {
-                    CardInfo givenCard = TrooperCurse.CardInfo;
-
-                    ModdingUtils.Utils.Cards.instance.AddCardToPlayer(targetplayer, givenCard, false, givenCard.GetAbbreviation(), 0, 0);
-                    ModdingUtils.Utils.CardBarUtils.instance.ShowAtEndOfPhase(player, givenCard);
-                }
-            }
+            gun.spread = 60f/360f;
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -36,7 +23,7 @@ namespace BreadCards.Cards
 
         protected override string GetTitle()
         {
-            return "Plot Armor";
+            return "Curse of The Troopers";
         }
         protected override string GetDescription()
         {
@@ -55,34 +42,6 @@ namespace BreadCards.Cards
             return new CardInfoStat[]
             {
                 new CardInfoStat()
-                {
-                    positive = true,
-                    stat = "Health",
-                    amount = "+40",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
-                                new CardInfoStat()
-                {
-                    positive = true,
-                    stat = "Spread",
-                    amount = "Reset",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
-                                                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = " ",
-                    amount = " ",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Get",
-                    amount = "Enemies",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotOf
-                },
-                                new CardInfoStat()
                 {
                     positive = false,
                     stat = "Spread",

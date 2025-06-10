@@ -1,18 +1,11 @@
-﻿using ModdingUtils.Utils;
-using ModsPlus;
-using Photon.Pun;
-using RWF;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
-using UnboundLib.Utils;
 using UnityEngine;
-using static UnityEngine.UI.GridLayoutGroup;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.BulletMods
 {
     class AccelleratingShots : CustomCard
     {
@@ -26,17 +19,29 @@ namespace BreadCards.Cards
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
             gun.projectileSpeed /= 2;
+            gun.gravity /= 2;
 
-            GameObject obj = new GameObject("AccellShotss", typeof(AccellShots));
+            Type type = typeof(AccellShots);
 
-            AccellShots.ownerID = player.playerID;
+            float defaultTime = 1f;
 
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
-            list.Add(new ObjectsToSpawn
+            if (!AccellShots.time.ContainsKey(player.playerID)) AccellShots.time.Add(player.playerID, defaultTime);
+            else AccellShots.time[player.playerID] += defaultTime;
+
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
+
+
+            AccellShots.time[player.playerID] = defaultTime;
+
+            GameObject obj = new GameObject("AccellShotsEffect", type);
+
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
             {
                 AddToProjectile = obj
-            });
-            gun.objectsToSpawn = list.ToArray();
+            }).ToArray();
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -67,14 +72,21 @@ namespace BreadCards.Cards
                     positive = true,
                     stat = "Bullet Speed Increase",
                     amount = "+100%",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLittleBitOf
+                    simepleAmount = CardInfoStat.SimpleAmount.aHugeAmountOf
+                },
+                new CardInfoStat()
+                {
+                    positive = true,
+                    stat = "Bullet Gravity",
+                    amount = "-50%",
+                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
                 },
                 new CardInfoStat()
                 {
                     positive = false,
                     stat = "Bullet Speed",
                     amount = "-50%",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLittleBitOf
+                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
                 }
             };
         }
@@ -91,12 +103,11 @@ namespace BreadCards.Cards
 
     public class AccellShots : MonoBehaviour
     {
-        public static int ownerID;
+        public static Dictionary<int, float> time = new Dictionary<int, float>();
 
         public Player owner;
 
         private MoveTransform moveTransform;
-        private PhotonView photonView;
 
         public void Awake()
         {
@@ -115,11 +126,10 @@ namespace BreadCards.Cards
 
             this.ExecuteAfterSeconds(0.01f, () =>
             {
-                photonView = GetComponent<PhotonView>();
                 moveTransform = GetComponent<MoveTransform>();
-                while (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); }
+                while (owner == null) { owner = GetComponent<SpawnedAttack>().spawner; }
 
-                if (photonView != null && moveTransform != null)
+                if (moveTransform != null)
                 {
                     SpeedUp();
                 }

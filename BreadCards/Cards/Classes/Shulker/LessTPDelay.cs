@@ -1,11 +1,4 @@
 ﻿using ClassesManagerReborn.Util;
-using ModdingUtils.Extensions;
-using ModdingUtils.Utils;
-using Photon.Pun;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
@@ -25,11 +18,15 @@ namespace BreadCards.Cards.Classes.Shulker
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            ShulkerHoming.TPdelay *= 0.65f;
+            ShulkerData sData = ShulkerHoming.stats[player.playerID];
+
+            sData.TPdelay *= 0.65f;
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            ShulkerHoming.TPdelay /= 0.65f;
+            ShulkerData sData = ShulkerHoming.stats[player.playerID];
+
+            sData.TPdelay /= 0.65f;
         }
         protected override string GetTitle()
         {
@@ -41,7 +38,7 @@ namespace BreadCards.Cards.Classes.Shulker
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.ShulkerArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {

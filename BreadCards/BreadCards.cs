@@ -1,29 +1,26 @@
 ﻿using BepInEx;
-using BepInEx.Configuration;
-using BreadCards.Cards;
+using BreadCards.Cards.BulletMods;
+using BreadCards.Cards.Classes.Magnet;
 using BreadCards.Cards.Classes.Shulker;
-using BreadCards.Cards.Classes.ZigZag;
 using BreadCards.Cards.Debuff;
+using BreadCards.Cards.General;
+using ClassesManagerReborn;
 using HarmonyLib;
 using ModdingUtils.Utils;
-using ModsPlus;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Dynamic;
 using System.Linq;
 using System.Reflection;
-using TMPro;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnboundLib.GameModes;
 using UnboundLib.Utils;
-using UnboundLib.Utils.UI;
 using UnityEngine;
-using UnityEngine.Experimental.PlayerLoop;
-using UnityEngine.UI;
 
 namespace BreadCards
 {
@@ -32,8 +29,7 @@ namespace BreadCards
     [BepInDependency("pykess.rounds.plugins.moddingutils", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency("root.classes.manager.reborn", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency("root.rarity.lib", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInDependency("com.CrazyCoders.Rounds.RarityBundle", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInDependency("com.willis.rounds.modsplus", BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency("larppaliz.rounds.settingsmod", BepInDependency.DependencyFlags.HardDependency)]
     // Declares our mod to Bepin
     [BepInPlugin(ModId, ModName, Version)]
     // The game our mod is associated with
@@ -42,33 +38,10 @@ namespace BreadCards
     {
         public static BreadCards instance { get; private set; }
 
-        private const string ModId = "BreadCards";
-        private const string ModName = "Bread's Cards";
-        public const string Version = "3.1.0"; // What version are we on (major.minor.patch)?
-        public const string ModInitials = "Breads Cards";
-
-        public static ConfigEntry<bool> BBConfig;
-
-        public static bool BlockBalance = false;
-
-        public static ConfigEntry<bool> EnableWinnerDrawLessConfig;
-        public static ConfigEntry<int> WinnerDrawAmountConfig;
-
-        public static ConfigEntry<int> StartingPicksConfig;
-
-        public static int StartingPicks = 1;
-
-        public static ConfigEntry<int> StartingDrawsConfig;
-
-        public static int StartingDraws = 0;
-
-        public static bool enableWinnerDrawLess = false;
-        public static int winnerDrawAmount = 2;
-
-
-        public static ConfigEntry<float> MinBlockCooldown;
-
-        public static float BCDm = 0f;
+        private const string ModId = "larppaliz.rounds.breadcards";
+        private const string ModName = "Bread's Cards Remake";
+        public const string Version = "0.1.0"; // What version are we on (major.minor.patch)?
+        public const string ModInitials = "BCrm";
 
         public GameObject optionsMenu;
 
@@ -79,30 +52,16 @@ namespace BreadCards
             // Use this to call any harmony patch files your mod may have
             var harmony = new Harmony(ModId);
             harmony.PatchAll();
-            GameModeManager.AddHook(GameModeHooks.HookPickEnd, PickEnd);
             GameModeManager.AddHook(GameModeHooks.HookPickStart, PickStart);
             GameModeManager.AddHook(GameModeHooks.HookRoundEnd, RoundEnd);
-            GameModeManager.AddHook(GameModeHooks.HookGameStart, GameStart);
+            GameModeManager.AddHook(GameModeHooks.HookGameEnd, ResetCardChoiceStuff);
+            GameModeManager.AddHook(GameModeHooks.HookGameStart, ResetCardChoiceStuff);
+            GameModeManager.AddHook(GameModeHooks.HookPickEnd, ResetCardChoiceOverrideSlots);
 
-            {
-                EnableWinnerDrawLessConfig = Config.Bind(ModInitials, "WinnerDrawToggle", false, "Toggle the winner draw stuff.");
-                WinnerDrawAmountConfig = Config.Bind(ModInitials, "WinnerDrawAmount", 2, "Winner Draw Amount");
-                StartingPicksConfig = Config.Bind(ModInitials, "StartingPicksAmount", 1, "Starting Picks Amount");
-                StartingDrawsConfig = Config.Bind(ModInitials, "StartingDrawsAmount", 0, "Extra Starting Draws Amount");
-                //MinBlockCooldown = Config.Bind(ModInitials, "MinBlockCD", 0f, "Toggle the winner draw stuff.");
-                BBConfig = Config.Bind(ModInitials, "BlockBalance", false, "Toggle Block Balance");
-            }
         }
         public static List<CardInfo> MyCursedCards = new List<CardInfo>();
         void Start()
         {
-            Unbound.RegisterHandshake(ModId, OnHandShakeCompleted);
-            Unbound.RegisterMenu("Breads Cards", () => { }, BreadGUI, optionsMenu, false);
-
-            StartingPicks = StartingPicksConfig.Value;
-            StartingDraws = StartingDrawsConfig.Value;
-            enableWinnerDrawLess = EnableWinnerDrawLessConfig.Value;
-            winnerDrawAmount = WinnerDrawAmountConfig.Value;
 
 
             CustomCard.BuildCard<DoubleShot>();
@@ -114,13 +73,14 @@ namespace BreadCards
             CustomCard.BuildCard<BulletStream>();
             CustomCard.BuildCard<SuperShotgun>();
             CustomCard.BuildCard<QuickswitchMagazine>();
-            CustomCard.BuildCard<NoBounces>();
+            CustomCard.BuildCard<AnvilCard>();
             CustomCard.BuildCard<TimelessBullets>();
             CustomCard.BuildCard<DualBurst>();
 
             CustomCard.BuildCard<IWantOneToo>();
             CustomCard.BuildCard<CardDealer>();
-            CustomCard.BuildCard<DoubleIt>();
+            CustomCard.BuildCard<GiveItToMeLater>(c => GiveItToMeLater.CardInfo = c);
+            CustomCard.BuildCard<DoubleIt>(c => DoubleIt.CardInfo = c);
             CustomCard.BuildCard<StaticBullets>();
 
             CustomCard.BuildCard<FuseBullets>();
@@ -135,7 +95,7 @@ namespace BreadCards
             CustomCard.BuildCard<BadHoming>(c => { BadHoming.CardInfo = c; });
 
             CustomCard.BuildCard<SplitShot>(c => { SplitShot.CardInfo = c; });
-            CustomCard.BuildCard<ProximityClusterBomb>(c => { ProximityClusterBomb.CardInfo = c; });
+            CustomCard.BuildCard<ClusterShots>(c => { ClusterShots.CardInfo = c; });
 
             CustomCard.BuildCard<HoppingBullets>(c => { HoppingBullets.CardInfo = c; });
             CustomCard.BuildCard<PlayerControlledBullets>(c => { PlayerControlledBullets.CardInfo = c; });
@@ -151,19 +111,22 @@ namespace BreadCards
             // CustomCard.BuildCard<ProximityFuse>((card) => { ProximityFuse.CardInfo = card; });
 
             CustomCard.BuildCard<CardTricks>();
-            CustomCard.BuildCard<Copyer>();
+            CustomCard.BuildCard<Copier>(c => Copier.CardInfo = c);
+            CustomCard.BuildCard<OldCopier>(c => OldCopier.CardInfo = c);
 
             //CustomCard.BuildCard<CardUpgrade>();
 
-            CustomCard.BuildCard<UltraDefense>();
-            CustomCard.BuildCard<MultiplyingSlime>();
+            CustomCard.BuildCard<UltraDefense>(c =>  UltraDefense.CardInfo = c);
+            CustomCard.BuildCard<MultiplyingSlime>(c => MultiplyingSlime.CardInfo = c);
 
-            CustomCard.BuildCard<BlackMarket>();
-            CustomCard.BuildCard<RiceMarket>();
+            CustomCard.BuildCard<BlackMarket>(c => BlackMarket.CardInfo = c);
+            CustomCard.BuildCard<RiceMarket>(c => RiceMarket.CardInfo = c);
             //CustomCard.BuildCard<BoosterPack>();
 
 
-            CustomCard.BuildCard<RiceMarketEffect>(c => { RiceMarketEffect.CardInfo = c; });
+            CustomCard.BuildCard<DarkWebDeals>(c =>  DarkWebDeals.CardInfo = c );
+            CustomCard.BuildCard<UltimateCopyCat>(c =>  UltimateCopyCat.CardInfo = c );
+            CustomCard.BuildCard<RiceMarketEffect>(c =>  RiceMarketEffect.CardInfo = c );
             CustomCard.BuildCard<Rice>(c => { Rice.CardInfo = c; });
 
             CustomCard.BuildCard<BlackMarketCopy>(c => { BlackMarketCopy.CardInfo = c; });
@@ -172,18 +135,18 @@ namespace BreadCards
             CustomCard.BuildCard<MultipliedSlime>(c => { MultipliedSlime.CardInfo = c; });
 
             //Debuff givers
-            CustomCard.BuildCard<TrueEvil>();
-            CustomCard.BuildCard<CurseOfTheTroopers>();
-            CustomCard.BuildCard<BigMonkeAttack>();
-            CustomCard.BuildCard<BouncySolution>();
-            CustomCard.BuildCard<StickySolution>();
+            CustomCard.BuildCard<TrueEvil>(c => TrueEvil.CardInfo = c);
+            CustomCard.BuildCard<PlotArmor>(c => PlotArmor.CardInfo = c);
+            CustomCard.BuildCard<BigMonkeAttack>(c => BigMonkeAttack.CardInfo = c);
+            CustomCard.BuildCard<BounceSabotage>(c => BounceSabotage.CardInfo = c);
+            CustomCard.BuildCard<StickySabotage>(c => StickySabotage.CardInfo = c);
 
             //Debuff Cards
             CustomCard.BuildCard<EvilCurse>(card => { EvilCurse.CardInfo = card; });
             CustomCard.BuildCard<BigMonkeCurse>(card => { BigMonkeCurse.CardInfo = card; });
-            CustomCard.BuildCard<TrooperCurse>(card => { TrooperCurse.CardInfo = card; });
-            CustomCard.BuildCard<Bounce>(card => { Bounce.CardInfo = card; });
-            CustomCard.BuildCard<Sticky>(card => { Sticky.CardInfo = card; });
+            CustomCard.BuildCard<CurseofTheTroopers>(card => { CurseofTheTroopers.CardInfo = card; });
+            CustomCard.BuildCard<BounceCurse>(card => { BounceCurse.CardInfo = card; });
+            CustomCard.BuildCard<StickySolution>(card => { StickySolution.CardInfo = card; });
 
 
             //Shulker Class
@@ -206,7 +169,7 @@ namespace BreadCards
             CustomCard.BuildCard<MagnetTeleport>(card=> { MagnetTeleport.CardInfo = card; });
             CustomCard.BuildCard<MagnetStop>(card=> { MagnetStop.CardInfo = card; });
 
-            /* /Zig zag Class
+            /*
             CustomCard.BuildCard<ZigZagBullets>(card=> { ZigZagBullets.CardInfo = card; });
 
             CustomCard.BuildCard<FasterZigZag>(card=> { FasterZigZag.CardInfo = card; });
@@ -227,67 +190,48 @@ namespace BreadCards
 
 
         }
+
+        public static bool allowCard(Player player, CardInfo card)
+        {
+            bool allowed = true;
+            if (ClassesRegistry.Get(card) != null)
+            {
+                allowed = ClassesRegistry.Get(card).PlayerIsAllowedCard(player);
+            }
+
+            return card.allowMultiple || !card.allowMultiple && !player.data.currentCards.Contains(card) && allowed;
+
+        }
         public List<int> GetRoundWinners() => new List<int>(GameModeManager.CurrentHandler.GetRoundWinners());
-        internal void OnHandShakeCompleted()
+        public static bool CommonCondition(CardInfo card, Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            if (PhotonNetwork.IsMasterClient)
+            bool allowed = true;
+            if (ClassesRegistry.Get(card) != null)
             {
-                for (int i = 0; i < 1; i++)
-                {
-                    NetworkingManager.RPC_Others(typeof(BreadCards), nameof(UpdateValues), enableWinnerDrawLess, winnerDrawAmount, BlockBalance, BCDm, StartingPicks, StartingDraws);
-                }
+                allowed = ClassesRegistry.Get(card).PlayerIsAllowedCard(player);
             }
+            return (card.rarity == CardInfo.Rarity.Common || card.rarity == CardInfo.Rarity.Uncommon) && allowed;
+
         }
-        private static void UpdateValues(bool WinnerDraw, int WinnerDrawValue, bool BB,  float BCD, int Picks, int Draws)
+
+        public static bool RareCondition(CardInfo card, Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            StartingPicks = Picks;
-            StartingDraws = Draws;
-            enableWinnerDrawLess = WinnerDraw;
-            winnerDrawAmount = WinnerDrawValue;
-            BlockBalance = BB;
-            BCDm = BCD;
-        }
-        private void BreadGUI(GameObject menu)
-        {
-            if (menu == null)
+            bool allowed = true;
+            if (ClassesRegistry.Get(card) != null)
             {
-                Debug.LogError("Menu object is null.");
-                return;
+                allowed = ClassesRegistry.Get(card).PlayerIsAllowedCard(player);
             }
-            MenuHandler.CreateText("Drawing Cards", menu, out TextMeshProUGUI _);
-            MenuHandler.CreateToggle(EnableWinnerDrawLessConfig.Value, "Toggle Winner Draws", menu, value => { EnableWinnerDrawLessConfig.Value = value; enableWinnerDrawLess = value; });
-            MenuHandler.CreateSlider("How many cards the winner gets to draw", menu, 20, 1, 20, winnerDrawAmount, value => { WinnerDrawAmountConfig.Value = (int)value; winnerDrawAmount = (int)value; }, out UnityEngine.UI.Slider WinnerAmountSlider, true);
-            MenuHandler.CreateSlider("How many cards you pick at the start", menu, 20, 1, 20, StartingPicks, value => { StartingPicksConfig.Value = (int)value; StartingPicks = (int)value; }, out UnityEngine.UI.Slider StartPickAmountSlider, true);
-            MenuHandler.CreateSlider("How many extra cards you draw at the start", menu, 20, -5, 20, StartingDraws, value => { StartingDrawsConfig.Value = (int)value; StartingDraws = (int)value; }, out UnityEngine.UI.Slider StartDrawAmountSlider, true);
-            MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
-            MenuHandler.CreateText("Rest hidden because they dont work", menu, out TextMeshProUGUI _);
-                MenuHandler.CreateText("Stats", menu, out TextMeshProUGUI _);
-                MenuHandler.CreateSlider("Minimum Block CD", menu, 20, 0f, 5f, BCDm, value => { MinBlockCooldown.Value = value; BCDm = value; }, out UnityEngine.UI.Slider cooldownSlider, false, new Color(120, 150, 255));
-                MenuHandler.CreateText(" ", menu, out TextMeshProUGUI _, 30);
-                MenuHandler.CreateText("Misc", menu, out TextMeshProUGUI _);
-                MenuHandler.CreateToggle(BBConfig.Value, "Toggle block cooldown balancing", menu, value => { BBConfig.Value = value; BlockBalance = value; });
-              
+            return card.rarity == CardInfo.Rarity.Rare && allowed;
         }
 
-        public bool CommonCondition(CardInfo card, Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
+        public static bool AnyCondition(CardInfo card, Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            return (card.rarity == CardInfo.Rarity.Common || card.rarity == CardInfo.Rarity.Uncommon);
-
-        }
-
-        public bool RareCondition(CardInfo card, Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
-        {
-            return (card.rarity == CardInfo.Rarity.Rare);
-        }
-
-        public bool AnyCondition(CardInfo card, Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
-        {
-            // do not allow duplicates of cards with allowMultiple == false (handled by moddingutils)
-            // card rarity must be as desired
-            // card cannot be another cardmanipulation card
-            // card cannot be from a blacklisted catagory of any other card (handled by moddingutils)
-
-            return (!MyCursedCards.Contains(card));
+            bool allowed = true;
+            if (ClassesRegistry.Get(card) != null)
+            {
+                allowed = ClassesRegistry.Get(card).PlayerIsAllowedCard(player);
+            }
+            return (!MyCursedCards.Contains(card)) && allowed;
         }
 
         public void WinnerCardPower(List<int> winners)
@@ -298,12 +242,12 @@ namespace BreadCards
                 {
                     if (winners.Contains(effect.player.teamID))
                     {
-                        CardInfo TheRandomCard = ModdingUtils.Utils.Cards.instance.GetRandomCardWithCondition(effect.player, effect.player.data.weaponHandler.gun, effect.player.data.weaponHandler.gun.GetComponent<GunAmmo>(), effect.player.data, effect.player.data.healthHandler, effect.player.GetComponent<Gravity>(), effect.player.data.block, effect.player.data.GetComponent<CharacterStatModifiers>(), this.CommonCondition);
+                        CardInfo TheRandomCard = ModdingUtils.Utils.Cards.instance.GetRandomCardWithCondition(effect.player, effect.player.data.weaponHandler.gun, effect.player.data.weaponHandler.gun.GetComponent<GunAmmo>(), effect.player.data, effect.player.data.healthHandler, effect.player.GetComponent<Gravity>(), effect.player.data.block, effect.player.data.GetComponent<CharacterStatModifiers>(), CommonCondition);
                         if (TheRandomCard == null)
                         {
                             // if there is no valid card, then try drawing from the list of all cards (inactive + active) but still make sure it is compatible
                             CardInfo[] allCards = ((ObservableCollection<CardInfo>)typeof(CardManager).GetField("activeCards", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null)).ToList().Concat((List<CardInfo>)typeof(CardManager).GetField("inactiveCards", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null)).ToArray();
-                            TheRandomCard = ModdingUtils.Utils.Cards.instance.DrawRandomCardWithCondition(allCards, effect.player, effect.player.data.weaponHandler.gun, effect.player.data.weaponHandler.gun.GetComponent<GunAmmo>(), effect.player.data, effect.player.data.healthHandler, effect.player.GetComponent<Gravity>(), effect.player.data.block, effect.player.data.GetComponent<CharacterStatModifiers>(), this.CommonCondition);
+                            TheRandomCard = ModdingUtils.Utils.Cards.instance.DrawRandomCardWithCondition(allCards, effect.player, effect.player.data.weaponHandler.gun, effect.player.data.weaponHandler.gun.GetComponent<GunAmmo>(), effect.player.data, effect.player.data.healthHandler, effect.player.GetComponent<Gravity>(), effect.player.data.block, effect.player.data.GetComponent<CharacterStatModifiers>(), CommonCondition);
 
                         }
                         if (TheRandomCard != null)
@@ -328,14 +272,14 @@ namespace BreadCards
 
                         for (int i = 0; i < 2; i++)
                         {
-                            TheRandomCard = ModdingUtils.Utils.Cards.instance.GetRandomCardWithCondition(effect.player, effect.player.data.weaponHandler.gun, effect.player.data.weaponHandler.gun.GetComponent<GunAmmo>(), effect.player.data, effect.player.data.healthHandler, effect.player.GetComponent<Gravity>(), effect.player.data.block, effect.player.data.GetComponent<CharacterStatModifiers>(), this.AnyCondition);
+                            TheRandomCard = ModdingUtils.Utils.Cards.instance.GetRandomCardWithCondition(effect.player, effect.player.data.weaponHandler.gun, effect.player.data.weaponHandler.gun.GetComponent<GunAmmo>(), effect.player.data, effect.player.data.healthHandler, effect.player.GetComponent<Gravity>(), effect.player.data.block, effect.player.data.GetComponent<CharacterStatModifiers>(), AnyCondition);
                             if (TheRandomCard != null)
                             {
                                 ModdingUtils.Utils.Cards.instance.AddCardToPlayer(effect.player, TheRandomCard, addToCardBar: true);
                                 ModdingUtils.Utils.CardBarUtils.instance.ShowAtEndOfPhase(effect.player, TheRandomCard);
                             }
                         }
-                        TheRandomCard = ModdingUtils.Utils.Cards.instance.GetRandomCardWithCondition(effect.player, effect.player.data.weaponHandler.gun, effect.player.data.weaponHandler.gun.GetComponent<GunAmmo>(), effect.player.data, effect.player.data.healthHandler, effect.player.GetComponent<Gravity>(), effect.player.data.block, effect.player.data.GetComponent<CharacterStatModifiers>(), this.RareCondition);
+                        TheRandomCard = ModdingUtils.Utils.Cards.instance.GetRandomCardWithCondition(effect.player, effect.player.data.weaponHandler.gun, effect.player.data.weaponHandler.gun.GetComponent<GunAmmo>(), effect.player.data, effect.player.data.healthHandler, effect.player.GetComponent<Gravity>(), effect.player.data.block, effect.player.data.GetComponent<CharacterStatModifiers>(), RareCondition);
                         if (TheRandomCard != null)
                         {
                             ModdingUtils.Utils.Cards.instance.AddCardToPlayer(effect.player, TheRandomCard, addToCardBar: true);
@@ -362,112 +306,16 @@ namespace BreadCards
         {
             PlayersItsDonefor = new Player[50];
             List<int> winners = GetRoundWinners();
-            if (EnableWinnerDrawLessConfig.Value && winners != null && DrawNCards.DrawNCards.NumDrawsConfig != null)
-            {
-                foreach (Player player in PlayerManager.instance.players)
-                {
-                    if (winners.Contains(player.teamID))
-                    {
-                        WinnerDraws[player.playerID] = DrawNCards.DrawNCards.GetPickerDraws(player.playerID);
-                        DrawNCards.DrawNCards.RPCA_SetPickerDraws(player.playerID, winnerDrawAmount + (DrawNCards.DrawNCards.GetPickerDraws(player.playerID) - DrawNCards.DrawNCards.NumDraws));
-                    }
-                }
-            }
+
             WinnerCardPower(winners);
             BoosterPackPower(winners);
             yield break;
         }
-
-        public void fixWinnerDrawThing(Player player)
-        {
-            if (EnableWinnerDrawLessConfig.Value && !PlayersItsDonefor.Contains(player))
-            {
-                List<int> winners = GetRoundWinners();
-                if (winners != null)
-                {
-                    if (winners.Contains(player.teamID) && WinnerDraws[player.playerID] != DrawNCards.DrawNCards.GetPickerDraws(player.playerID))
-                    {
-                        PlayersItsDonefor[player.playerID] = player;
-                        DrawNCards.DrawNCards.RPCA_SetPickerDraws(player.playerID, WinnerDraws[player.playerID]);
-                    }
-                }
-            }
-        }
-        private IEnumerator PickEnd(IGameModeHandler gm)
-        {
-            SelectAnyNumberRounds.Plugin.configPickNumber.Value = 1;
-
-            for (int i = 0; i < PlayerManager.instance.players.Count; i++)
-            {
-                if (PlayersItsDonefor != null)
-                {
-                    if (PlayerManager.instance.players != null && PlayersItsDonefor.Count() > 1)
-                    {
-                        fixWinnerDrawThing(PlayerManager.instance.players[i]);
-                    }
-                }
-            }
-            yield break;
-        }
-
         private IEnumerator PickStart(IGameModeHandler gm)
         {
             AddCardToPlayerOnPickStart();
             BoosterPackRemove();
             yield break;
-        }
-
-        private IEnumerator GameEnd(IGameModeHandler gm)
-        {
-            SelectAnyNumberRounds.Plugin.configPickNumber.Value = 2;
-            yield break;
-        }
-
-        private IEnumerator FirstRoundStart(IGameModeHandler gm)
-        {
-            foreach (Player player in PlayerManager.instance.players)
-            {
-                DrawNCards.DrawNCards.RPCA_SetPickerDraws(player.playerID, DrawNCards.DrawNCards.GetPickerDraws(player.playerID) - StartingDraws);
-            }
-            yield break;
-        }
-        private IEnumerator GameStart(IGameModeHandler gm)
-        {
-            for (int i = 0; i < PlayerManager.instance.players.Count; i++)
-            {
-                Player player = PlayerManager.instance.players[i];
-
-                player.playerID = i;
-
-            }
-
-            SelectAnyNumberRounds.Plugin.enableContinueCard.Value = false;
-            SelectAnyNumberRounds.Plugin.configPickNumber.Value = StartingPicks;
-
-            foreach (Player player in PlayerManager.instance.players)
-            {
-                DrawNCards.DrawNCards.RPCA_SetPickerDraws(player.playerID, DrawNCards.DrawNCards.NumDraws + StartingDraws);
-
-                player.gameObject.GetOrAddComponent<BlockBalancer>();
-            }
-
-
-
-            GameModeManager.AddOnceHook(GameModeHooks.HookRoundStart, FirstRoundStart);
-
-            yield break;
-        }
-
-        public int PlayerDrawsIncrease(Player player, int Amount)
-        {
-            if (GameModeManager.CurrentHandler.GetTeamScore(player.teamID).rounds > 0)
-            {
-                BreadCards.instance.fixWinnerDrawThing(player);
-            }
-
-            DrawNCards.DrawNCards.RPCA_SetPickerDraws(player.playerID, DrawNCards.DrawNCards.GetPickerDraws(player.playerID) + Amount);
-
-            return DrawNCards.DrawNCards.GetPickerDraws(player.playerID);
         }
 
         public void AddCardToPlayerOnPickStart()
@@ -519,7 +367,7 @@ namespace BreadCards
 
 
 
-        public static Vector2 RotatedBy(Vector2 spinningpoint, float degrees, Vector2 center = default(Vector2))
+        public static Vector2 RotatedBy(Vector2 spinningpoint, float degrees, Vector2 center = default)
         {
             double radians = (float)((double)degrees * (Math.PI / 180.0));
             float num = (float)Math.Cos(radians);
@@ -559,7 +407,7 @@ namespace BreadCards
 
             Gun explosiveGun = explosiveBullet.GetComponent<Gun>();
 
-            if (gun != null)
+            if (!gun)
             {
                 // change the gun sounds
                 gun.soundGun.AddSoundImpactModifier(explosiveGun.soundImpactModifier);
@@ -575,6 +423,26 @@ namespace BreadCards
             Explosion explosion = explosionCustom.GetComponent<Explosion>();
 
             return (A_ExplosionSpark, explosionCustom, explosion);
+        }
+
+        private IEnumerator ResetCardChoiceStuff(IGameModeHandler gm)
+        {
+            foreach (Player target in PlayerManager.instance.players)
+            {
+                BreadCards_CardChoicesPatch.ClearForcedChoices(target);
+            }
+            yield break;
+        }
+
+        private IEnumerator ResetCardChoiceOverrideSlots(IGameModeHandler gm)
+        {
+            BreadCards_CardExtraInfoPatch.DestroyObject();
+
+            foreach (Player target in PlayerManager.instance.players)
+            {
+                BreadCards_CardChoicesPatch.ClearOverridedSlots(target);
+            }
+            yield break;
         }
     }
     public class ProjectileAdder : MonoBehaviour
@@ -610,29 +478,6 @@ namespace BreadCards
         }
     }
 
-    public class BlockBalancer : MonoBehaviour
-    {
-        public Player player;
-        public void Start()
-        {
-            player = gameObject.GetComponentInParent<Player>();
-        }
-
-        public void Update()
-        {
-
-            if (player.data.block.IsBlocking())
-            {
-                player.data.block.counter *= 0f;
-            }
-
-            if (player.data.block.Cooldown() < 1f)
-            {
-                player.data.block.cdAdd += 0.1f;
-            }
-        }
-    }
-
     [HarmonyPatch(typeof(ProjectileCollision))]
     public class ProjectileCollisionPatch
     {
@@ -647,5 +492,322 @@ namespace BreadCards
 
                 return true;
         }
+    }
+
+    [HarmonyPatch(typeof(CardChoice), "Update")]
+    public static class BreadCards_CardExtraInfoPatch
+    {
+        public static Dictionary<string, Func<Player, CardInfo>> extraInfoCardData = new Dictionary<string, Func<Player, CardInfo>>();
+
+        public static GameObject shownObject;
+        public static int selectedCard = -1;
+        public static int spawnedCount = 0;
+
+        public static List<CardInfo> getCardsFromGameObjects(List<GameObject> gameObjects)
+        {
+            List<CardInfo> cards = new List<CardInfo>();
+
+            foreach (GameObject obj in gameObjects)
+            {
+                if (obj.GetComponent<CardInfo>())
+                {
+                    CardInfo info = obj.GetComponent<CardInfo>();
+                    cards.Add(info);
+                }
+            }
+
+            return cards;
+        }
+
+        public static void DestroyObject()
+        {
+            selectedCard = -1;
+
+            if (shownObject != null) GameObject.Destroy(shownObject);
+            shownObject = null;
+        }
+
+        public static void Postfix(ref CardChoice __instance, ref int ___currentlySelectedCard, ref List<GameObject> ___spawnedCards, ref Transform[] ___children)
+        {
+            if (CardChoiceVisuals.instance != null)
+            {
+
+                if (__instance.IsPicking)
+                {
+
+                    int index = ___currentlySelectedCard;
+
+
+                    int count = ___spawnedCards.Count;
+
+                    if (spawnedCount != count) { DestroyObject(); }
+
+                    spawnedCount = count;
+
+                    if (index != selectedCard)
+                    {
+                        DestroyObject();
+                    }
+
+                    selectedCard = index;
+
+                    if (shownObject == null)
+                    {
+                        List<CardInfo> cards = getCardsFromGameObjects(___spawnedCards);
+
+                        Player player = PlayerManager.instance.players[__instance.pickrID];
+
+                        if (player == null) return;
+
+                        CardInfo card = null;
+
+                        if (cards.Count - 1 < index || index < 0) return;
+
+                        if (extraInfoCardData.ContainsKey(cards[index].cardName)) card = extraInfoCardData[cards[index].cardName].Invoke(player);
+
+                        if (card == null)
+                        {
+                            return;
+                        }
+
+                        Transform cardTransform = ___spawnedCards[index].transform;
+
+
+                        Vector3 baseOffset = cardTransform.right;
+
+                        if (cardTransform.position.x > 0) baseOffset *= -1f;
+
+                        if (cardTransform.rotation.eulerAngles.z == 0) baseOffset = cardTransform.up * -1.3f;
+
+                        shownObject = __instance.AddCardVisual(card, new Vector3(0, 0, 0));
+                        Vector3 rightOffset = baseOffset * 12f;
+                        rightOffset.x *= cardTransform.localScale.x;
+                        rightOffset.y *= cardTransform.localScale.y;
+                        rightOffset.z *= cardTransform.localScale.z;
+
+                        shownObject.transform.localScale = cardTransform.localScale * 0.8f;
+                        shownObject.transform.position = cardTransform.position + rightOffset;
+                        shownObject.transform.AddZPosition(-15);
+                        shownObject.transform.rotation = cardTransform.rotation;
+
+                    }
+                }
+                else DestroyObject();
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(CardChoice), "SpawnUniqueCard")]
+    public static class BreadCards_CardChoicesPatch
+    {
+        public static Dictionary<int, List<ForcedCardRequest>> pendingForcedCards = new Dictionary<int, List<ForcedCardRequest>>();
+
+        public static Dictionary<int, List<ForcedCardRequest>> readyForcedCards = new Dictionary<int, List<ForcedCardRequest>>();
+
+        public static void AddForcedCardChoice(Player player, ForcedCardRequest fcr)
+        {
+            if (!pendingForcedCards.ContainsKey(player.playerID))
+                pendingForcedCards.Add(player.playerID, new List<ForcedCardRequest>());
+
+            pendingForcedCards[player.playerID].Add(fcr);
+        }
+
+        public static bool RemoveForcedCardChoice(Player player, ForcedCardRequest fcr)
+        {
+            if (!pendingForcedCards.ContainsKey(player.playerID)) return false;
+
+            return pendingForcedCards[player.playerID].Remove(fcr);
+        }
+        public static void RemoveFromReadyForcedCards(int playerID, ForcedCardRequest fcr)
+        {
+            if (!readyForcedCards.ContainsKey(playerID))
+                return;
+
+            if (!readyForcedCards[playerID].Contains(fcr))
+                return;
+
+            readyForcedCards[playerID].Remove(fcr);
+        }
+
+        public static void ClearForcedChoices(Player player)
+        {
+            int playerId = PlayerManager.instance.players.IndexOf(player);
+
+            if (pendingForcedCards == null) pendingForcedCards = new Dictionary<int, List<ForcedCardRequest>>();
+
+            if (pendingForcedCards.ContainsKey(playerId))
+            {
+                pendingForcedCards.Remove(playerId);
+            }
+        }
+
+        public static void ClearOverridedSlots(Player player)
+        {
+            int playerId = PlayerManager.instance.players.IndexOf(player);
+
+            if (overridedSlotsThisRun == null) overridedSlotsThisRun = new Dictionary<int, List<int>>();
+
+            if (overridedSlotsThisRun.ContainsKey(playerId))
+            {
+                overridedSlotsThisRun[playerId] = new List<int>();
+            }
+        }
+
+        static Dictionary<int, List<int>> overridedSlotsThisRun = new Dictionary<int, List<int>>();
+
+        public static void SetBetterSlots(Player player, int maxCount)
+        {
+            int[] slotCounts = new int[maxCount];
+
+            foreach (ForcedCardRequest card in readyForcedCards[player.playerID])
+            {
+                if (card.reverse) card.slot = maxCount - card.slot - 1;
+
+                if (card.slot == -1)
+                {
+                    int tempSlot = 0;
+
+                    for (int i = 0; i < 100; i++)
+                    {
+                        if (slotCounts[tempSlot] > 0)
+                        {
+                            tempSlot = UnityEngine.Random.Range(0, maxCount);
+                        }
+                    }
+
+                    if (slotCounts[tempSlot] == 0)
+                    {
+                        card.slot = tempSlot;
+                    }
+                    else return;
+
+                }
+                else for (int i = 0; i < maxCount; i++)
+                    {
+                        if (slotCounts[card.slot] > 0)
+                        {
+                            if (card.reverse) card.slot--;
+                            else card.slot++;
+                        }
+                        else break;
+                    }
+
+                if (card.slot >= 0 && card.slot < maxCount) slotCounts[card.slot]++;
+            }
+
+        }
+
+        
+
+        [HarmonyPriority(0)]
+        [HarmonyAfter(new string[] { "com.Root.Null", "com.willuwontu.rounds.cards", "pykess.rounds.plugins.cardchoicespawnuniquecardpatch", "pykess.rounds.plugins.pickphaseshenanigans" })]
+        public static void Postfix(ref CardChoice __instance, ref GameObject __result, ref List<GameObject> ___spawnedCards, ref Transform[] ___children, ref int ___pickrID)
+        {
+
+            if (___pickrID < 0 || ___pickrID > PlayerManager.instance.players.Count || PlayerManager.instance == null || PlayerManager.instance.players == null) return;
+
+            Player player = PlayerManager.instance.players[___pickrID];
+
+            if (player == null || pendingForcedCards == null || __instance == null || __result == null || ___spawnedCards == null || ___children == null) return;
+
+            if (!pendingForcedCards.ContainsKey(___pickrID)) return;
+
+            if (overridedSlotsThisRun == null) overridedSlotsThisRun = new Dictionary<int, List<int>>();
+
+            if (___spawnedCards.Count == 0)
+            {
+                readyForcedCards = pendingForcedCards.ToDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value
+                        .Where(fcr => fcr.condition(player))
+                        .Select(fcr => fcr.Clone())
+                        .ToList());
+
+                SetBetterSlots(player, ___children.Count());
+            }
+
+            for (int i = 0; i < readyForcedCards[___pickrID].Count; i++)
+            {
+                ForcedCardRequest fcr = readyForcedCards[___pickrID][i];
+
+                int slot = fcr.slot;
+
+
+                if (___spawnedCards.Count == slot)
+                {
+                    CardInfo card = null;
+
+                    if (fcr.customRoll == null) card = fcr.card;
+
+                    if (card == null && fcr.customRoll != null)
+                    {
+                        card = fcr.customRoll?.Invoke(player);
+                    }
+
+                    if (card == null) { card = Rice.CardInfo; BreadCards.print("Card was null, turned it into RICE"); }
+
+                    if (!overridedSlotsThisRun.ContainsKey(player.playerID)) overridedSlotsThisRun.Add(player.playerID, new List<int>());
+
+
+
+                    overridedSlotsThisRun[player.playerID].AddItem(slot);
+
+                    RemoveFromReadyForcedCards(player.playerID, fcr);
+
+
+                    GameObject old = __result;
+                    if (BreadCards.instance == null || card.gameObject == null) return;
+
+                    BreadCards.instance.ExecuteAfterFrames(3, delegate
+                    {
+                        PhotonNetwork.Destroy(old);
+                    });
+                    __result = (GameObject)typeof(CardChoice).GetMethod("Spawn", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(__instance, new object[3]
+                    {
+                                card.gameObject,
+                                __result.transform.position,
+                                __result.transform.rotation
+                    });
+                    __result.GetComponent<CardInfo>().sourceCard = card;
+                    __result.GetComponentInChildren<DamagableEvent>().GetComponent<Collider2D>().enabled = false;
+
+                    break;
+                }
+            }
+        }
+    }
+
+    public class ForcedCardRequest
+    {
+        public ForcedCardRequest Clone()
+        {
+            return new ForcedCardRequest
+            {
+                card = this.card, // deep clone if needed
+                slot = this.slot,
+                fill = this.fill,
+                reverse = this.reverse,
+                customRoll = this.customRoll,
+                condition = this.condition
+            };
+        }
+
+        // condition for the card to be added to the draw that is checked each draw (see DoubleIt.cs)
+        public Func<Player, bool> condition = (_) => true;
+
+        // for special things like rolling a random card eachtime (see DarkWebDeals.cs or UltimateCopyCat.cs)
+        public Func<Player, CardInfo> customRoll;
+
+        // use if set card (see RiceMarketEffect.cs)
+        public CardInfo card;
+
+        // the slot the card is replacing
+        public int slot;
+
+        // ex: whetever or not the card will move from slot 1 to 2 if slot 1 was already overrided
+        public bool fill;
+
+        // reverses the slots so 0 is now the last card and 1 is the second last
+        public bool reverse;
     }
 }

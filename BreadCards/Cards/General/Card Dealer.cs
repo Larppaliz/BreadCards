@@ -1,10 +1,5 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
-
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
 using System.Collections.ObjectModel;
 using UnboundLib.Utils;
 using System.Reflection;
@@ -13,19 +8,19 @@ using System.Collections.Generic;
 using ModdingUtils.Extensions;
 using HarmonyLib;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class CardDealer : CustomCard
     {
         public bool CommonCondition(CardInfo card, Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            return (card.rarity == CardInfo.Rarity.Common);
+            return card.rarity == CardInfo.Rarity.Common;
 
         }
 
         public bool NotHas(CardInfo card, Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            return (!player.data.currentCards.Contains(card) && card.allowMultiple);
+            return !player.data.currentCards.Contains(card) && card.allowMultiple;
 
         }
 
@@ -62,12 +57,12 @@ namespace BreadCards.Cards
                 }
                 else
                 {
-                    CardInfo randomCard1 = ModdingUtils.Utils.Cards.instance.NORARITY_GetRandomCardWithCondition(targetplayer, gun, gunAmmo, data, health, gravity, block, characterStats, this.CommonCondition);
+                    CardInfo randomCard1 = ModdingUtils.Utils.Cards.instance.NORARITY_GetRandomCardWithCondition(targetplayer, gun, gunAmmo, data, health, gravity, block, characterStats, CommonCondition);
                     if (randomCard1 == null)
                     {
                         // if there is no valid card, then try drawing from the list of all cards (inactive + active) but still make sure it is compatible
                         CardInfo[] allCards = ((ObservableCollection<CardInfo>)typeof(CardManager).GetField("activeCards", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null)).ToList().Concat((List<CardInfo>)typeof(CardManager).GetField("inactiveCards", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null)).ToArray();
-                        randomCard1 = ModdingUtils.Utils.Cards.instance.DrawRandomCardWithCondition(allCards, targetplayer, null, null, null, null, null, null, null, this.CommonCondition);
+                        randomCard1 = ModdingUtils.Utils.Cards.instance.DrawRandomCardWithCondition(allCards, targetplayer, null, null, null, null, null, null, null, CommonCondition);
                     }
                     GottenCardPlayer.AddItem(targetplayer);
                     gottencards.AddItem(randomCard1);
@@ -119,49 +114,49 @@ namespace BreadCards.Cards
                     positive = true,
                     stat = "Health / Player",
                     amount = "+10%",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
+                    simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 },
                 new CardInfoStat()
                 {
                     positive = true,
                     stat = "",
                     amount = "",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
+                    simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 },
                 new CardInfoStat()
                 {
                     positive = true,
                     stat = "Get",
-                    amount = "You & Teammates",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
+                    amount = "<color=#00ff00>You & Teammates</color>",
+                    simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 },
                  new CardInfoStat()
                 {
                     positive = true,
-                    stat = "Card & copy",
+                    stat = "Card & Copy",
                     amount = "+1",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
+                    simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 },
                 new CardInfoStat()
                 {
                     positive = true,
                     stat = "",
                     amount = "",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
+                    simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 },
                 new CardInfoStat()
                 {
                     positive = false,
                     stat = "Get",
-                    amount = "Enemies",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
+                    amount = "<color=#ff0000>Enemies</color>",
+                    simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 },
                  new CardInfoStat()
                 {
                     positive = true,
-                    stat = "Common card",
+                    stat = "<color=#a4a49c>COMMON</color> Card",
                     amount = "+1",
-                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
+                    simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 },
             };
         }

@@ -1,20 +1,12 @@
 ﻿using HarmonyLib;
-using ModdingUtils.Utils;
-using ModsPlus;
 using Photon.Pun;
-using Photon.Pun.Simple;
-using Photon.Realtime;
-using RWF;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
-using static UnityEngine.UI.GridLayoutGroup;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.BulletMods
 {
     class PlayerControlledBullets : CustomCard
     {
@@ -24,21 +16,23 @@ namespace BreadCards.Cards
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             cardInfo.allowMultiple = false;
-            gun.damage = 0.5f;
+            gun.damage = 1.1f;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
+            Type type = typeof(PlayerControlEffect);
 
-            GameObject obj = new GameObject("PlayerControlEffect", typeof(PlayerControlEffect));
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
 
-            PlayerControlEffect.owner = player;
+            GameObject obj = new GameObject("PlayerControlEffect", type);
 
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
-            list.Add(new ObjectsToSpawn
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
             {
                 AddToProjectile = obj
-            });
-            gun.objectsToSpawn = list.ToArray();
+            }).ToArray();
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -66,9 +60,9 @@ namespace BreadCards.Cards
             {
                 new CardInfoStat()
                 {
-                    positive = false,
+                    positive = true,
                     stat = "DMG",
-                    amount = "-50%",
+                    amount = "+10%",
                     simepleAmount = CardInfoStat.SimpleAmount.aLittleBitOf
                 }
             };
@@ -108,6 +102,7 @@ namespace BreadCards.Cards
                     Destroy(obj.gameObject);
                 }
             }
+            if (owner == null && GetComponent<SpawnedAttack>() != null) { owner = GetComponent<SpawnedAttack>().spawner; this.ExecuteAfterSeconds(0.01f, () => Awake()); return; }
             this.ExecuteAfterSeconds(0.2f, () =>
             {
                 start = true;
@@ -121,6 +116,10 @@ namespace BreadCards.Cards
 
         public void Update()
         {
+            if (GetComponent<SpawnedAttack>() != null) owner = GetComponent<SpawnedAttack>().spawner;
+
+            if (owner == null) return;
+
             if (!start) return;
 
             if (photonView != null)

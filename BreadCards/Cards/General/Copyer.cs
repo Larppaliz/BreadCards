@@ -1,33 +1,48 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
-
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
-using System.Collections.ObjectModel;
-using UnboundLib.Utils;
-using System.Reflection;
-using System.Linq;
-using System.Collections.Generic;
 using ModdingUtils.Extensions;
-using HarmonyLib;
 using ModdingUtils.Utils;
-using CardThemeLib;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
-    class Copyer : CustomCard
+    class Copier : CustomCard
     {
+        public static CardInfo CardInfo;
+        public override void Callback()
+        {
+            if (!BreadCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
+                BreadCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, (player) =>
+                {
+                    CardInfo card = null;
+
+
+                    for (int i = player.data.currentCards.Count - 1; i >= 0; i--)
+                    {
+                        card = player.data.currentCards[i];
+
+                        if (card != null)
+                        {
+                            if (BreadCards.allowCard(player, card))
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (card == null)
+                    {
+                        card = Rice.CardInfo;
+                    }
+
+                    return card;
+                });
+        }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             cardInfo.GetAdditionalData().canBeReassigned = false;
             cardInfo.allowMultiple = false;
-
-            gun.damage = 0.75f;
-
-            statModifiers.health = 0.75f;
         }
+
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
             System.Random random = new System.Random();
@@ -43,10 +58,7 @@ namespace BreadCards.Cards
                 {
                     if (card.allowMultiple)
                     {
-                        ModdingUtils.Utils.Cards.instance.AddCardToPlayer(player, card, addToCardBar: true);
-                        CardBarUtils.instance.ShowAtEndOfPhase(player, card);
-
-                        return;
+                        break;
                     }
                 }
             }
@@ -55,7 +67,6 @@ namespace BreadCards.Cards
             {
                 card = Rice.CardInfo;
             }
-
 
             ModdingUtils.Utils.Cards.instance.AddCardToPlayer(player, card, addToCardBar:true);
             CardBarUtils.instance.ShowAtEndOfPhase(player,card);
@@ -75,7 +86,7 @@ namespace BreadCards.Cards
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.CardCopierArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {
@@ -85,20 +96,6 @@ namespace BreadCards.Cards
         {
             return new CardInfoStat[]
             {
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "DMG",
-                    amount = "-25%",
-                    simepleAmount = CardInfoStat.SimpleAmount.lower
-                },
-                new CardInfoStat()
-                {
-                    positive = false,
-                    stat = "Health",
-                    amount = "-25%",
-                    simepleAmount = CardInfoStat.SimpleAmount.lower
-                }
             };
         }
         protected override CardThemeColor.CardThemeColorType GetTheme()

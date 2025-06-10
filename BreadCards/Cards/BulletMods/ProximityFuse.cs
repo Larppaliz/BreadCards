@@ -1,22 +1,4 @@
-﻿using ModdingUtils.Utils;
-using ModsPlus;
-using Photon.Pun;
-using Photon.Pun.Simple;
-using RWF;
-using Sonigon;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnboundLib;
-using UnboundLib.Cards;
-using UnityEngine;
-using Sonigon;
-using static UnityEngine.Random;
-
-/*
+﻿/*
 namespace BreadCards.Cards
 {
     class ProximityFuse : CustomCard
@@ -147,7 +129,7 @@ namespace BreadCards.Cards
                 photonView = GetComponent<PhotonView>();
                 moveTransform = GetComponent<MoveTransform>();
 
-                while (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); }
+                while (owner == null) { owner = GetComponent<SpawnedAttack>().spawner; }
 
             });
 

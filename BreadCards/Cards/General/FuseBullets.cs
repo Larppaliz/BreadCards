@@ -1,14 +1,7 @@
-﻿using ModdingUtils.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnboundLib;
-using UnboundLib.Cards;
+﻿using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class FuseBullets: CustomCard
     {
@@ -17,8 +10,8 @@ namespace BreadCards.Cards
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            gun.damage *= 1f + ((float)gun.numberOfProjectiles*0.8f);
-            gun.projectileSize *= 1f + ((float)gun.numberOfProjectiles / 5f);
+            gun.damage *= 1f + gun.numberOfProjectiles*0.8f;
+            gun.projectileSize *= 1f + gun.numberOfProjectiles / 5f;
             gun.gravity += 0.2f * gun.numberOfProjectiles;
             gun.numberOfProjectiles = 1;
         }

@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnboundLib;
-using UnboundLib.Cards;
+﻿using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class MoonBullets : CustomCard
     {
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             gun.gravity = 0.4f;
-            gun.projectileSpeed = 0.4f;
+            gun.projectileSpeed = 0.6f;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -46,16 +40,16 @@ namespace BreadCards.Cards
                 new CardInfoStat()
                 {
                     positive = false,
-                    stat = "Projectile Velocity",
-                    amount = "-60%",
-                    simepleAmount = CardInfoStat.SimpleAmount.Some
+                    stat = "Bullet Speed",
+                    amount = "-40%",
+                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
                 },
                 new CardInfoStat()
                 {
                     positive = true,
-                    stat = "Projectile Gravity",
+                    stat = "Bullet Gravity",
                     amount = "-60%",
-                    simepleAmount = CardInfoStat.SimpleAmount.Some
+                    simepleAmount = CardInfoStat.SimpleAmount.aLotLower
                 }
             };
         }

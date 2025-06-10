@@ -1,45 +1,51 @@
-﻿using HarmonyLib;
-using ModdingUtils.Extensions;
-using Photon.Pun;
-using Photon.Pun.UtilityScripts;
-using SelectAnyNumberRounds.Cards;
-using SelectAnyNumberRounds;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using UnboundLib;
-using UnboundLib.Cards;
-using UnboundLib.GameModes;
+﻿using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class RiceMarketEffect : CustomCard
     {
         public override bool GetEnabled() => false;
 
         public static CardInfo CardInfo;
+
+        public override void Callback()
+        {
+            if (!BreadCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
+                BreadCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, _ => Rice.CardInfo);
+        }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
+            cardInfo.allowMultiple = false;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
+            BreadCards_CardChoicesPatch.AddForcedCardChoice(player, new ForcedCardRequest
+            {
+                card = Rice.CardInfo,
+                slot = 0,
+                fill = true,
+                reverse = true
+            });
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
+            BreadCards_CardChoicesPatch.RemoveForcedCardChoice(player, new ForcedCardRequest
+            {
+                card = Rice.CardInfo,
+                slot = 0,
+                fill = true,
+                reverse = true
+            });
         }
 
         protected override string GetTitle()
         {
-            return "Rice Market Effect";
+            return "Riced Up";
         }
         protected override string GetDescription()
         {
-            return "Replace last card pick option with rice on your draw phase";
+            return "Replace one of your card options with a <color=#5c7c9c>RICE</color> card";
         }
         protected override GameObject GetCardArt()
         {
@@ -62,39 +68,6 @@ namespace BreadCards.Cards
         public override string GetModName()
         {
             return BreadCards.ModInitials;
-        }
-    }
-    [HarmonyPatch(typeof(CardChoice), "SpawnUniqueCard")]
-    public static class LastCardContinue
-    {
-        [HarmonyPriority(0)]
-        [HarmonyAfter(new string[] { "com.Root.Null", "com.willuwontu.rounds.cards", "pykess.rounds.plugins.cardchoicespawnuniquecardpatch", "pykess.rounds.plugins.pickphaseshenanigans" })]
-        public static void Postfix(ref CardChoice __instance, ref GameObject __result, ref List<GameObject> ___spawnedCards, ref Transform[] ___children, ref int ___pickrID)
-        {
-            if (PlayerManager.instance.players[___pickrID].data.currentCards.Contains(RiceMarketEffect.CardInfo))
-            {
-                CardInfo card = Rice.CardInfo;
-
-                if (___spawnedCards.Count == ___children.Length - 1)
-                {
-
-
-                    GameObject old = __result;
-                    Plugin.instance.ExecuteAfterFrames(3, delegate
-                    {
-                        PhotonNetwork.Destroy(old);
-                    });
-                    Plugin.Logger.LogDebug("Spawning rice card");
-                    __result = (GameObject)typeof(CardChoice).GetMethod("Spawn", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(__instance, new object[3]
-                    {
-                    card.gameObject,
-                    __result.transform.position,
-                    __result.transform.rotation
-                    });
-                    __result.GetComponent<CardInfo>().sourceCard = card;
-                    __result.GetComponentInChildren<DamagableEvent>().GetComponent<Collider2D>().enabled = false;
-                }
-            }
         }
     }
 }

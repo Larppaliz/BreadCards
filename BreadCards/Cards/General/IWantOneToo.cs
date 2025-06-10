@@ -1,12 +1,7 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
 
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
-
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class IWantOneToo : CustomCard
     {
@@ -30,7 +25,7 @@ namespace BreadCards.Cards
         }
         protected override string GetDescription()
         {
-            return "You get a random common or uncommon card when you win";
+            return "You get a random <color=#a4a49c>COMMON</color> or <color=#62f2f7>UNCOMMON</color> card when you win";
         }
         protected override GameObject GetCardArt()
         {

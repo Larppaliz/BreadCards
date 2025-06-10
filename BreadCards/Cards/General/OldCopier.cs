@@ -1,57 +1,73 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
-using System.Collections.Generic;
 using ModdingUtils.Extensions;
 using ModdingUtils.Utils;
-using ClassesManagerReborn;
+
 
 namespace BreadCards.Cards.General
 {
-    class CardTricks : CustomCard
+    class OldCopier : CustomCard
     {
+        public static CardInfo CardInfo;
+        public override void Callback()
+        {
+            if (!BreadCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
+                BreadCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, (player) =>
+                {
+                    CardInfo card = null;
+
+
+                    for (int i = 0; i < player.data.currentCards.Count; i++)
+                    {
+                        card = player.data.currentCards[i];
+
+                        if (card != null)
+                        {
+                            if (BreadCards.allowCard(player, card))
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (card == null)
+                    {
+                        card = Rice.CardInfo;
+                    }
+
+                    return card;
+                });
+        }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             cardInfo.GetAdditionalData().canBeReassigned = false;
             cardInfo.allowMultiple = false;
         }
+
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
             System.Random random = new System.Random();
 
-            List<Player> candatites = new List<Player>();
+            CardInfo card = null;
 
-            foreach (Player candatite in PlayerManager.instance.players)
+            for (int i = 0; i < player.data.currentCards.Count; i++)
             {
-                if (candatite.data.currentCards.Count > 0)
+                card = player.data.currentCards[i];
+
+                if (card != null)
                 {
-                    candatites.Add(candatite);
-                }
-            }
-
-
-            CardInfo card = Rice.CardInfo;
-
-
-            if (candatites.Count > 0)
-            {
-
-                Player target = candatites[random.Next(candatites.Count)];
-
-
-                for (int i = target.data.currentCards.Count - 1; i >= 0; i--)
-                {
-                    card = target.data.currentCards[i];
-
-
-                    if (card != null)
+                    if (card.allowMultiple)
                     {
-                        if (BreadCards.allowCard(player, card))
-                        {
-                            break;
-                        }
+                        break;
                     }
                 }
             }
+
+            if (card == null)
+            {
+                card = Rice.CardInfo;
+            }
+
 
             ModdingUtils.Utils.Cards.instance.AddCardToPlayer(player, card, addToCardBar:true);
             CardBarUtils.instance.ShowAtEndOfPhase(player,card);
@@ -63,15 +79,15 @@ namespace BreadCards.Cards.General
 
         protected override string GetTitle()
         {
-            return "Card Tricks";
+            return "Dusty Card Copier";
         }
         protected override string GetDescription()
         {
-            return "Get a copy of a random players newest card that allows duplicates.";
+            return "Get a copy of your oldest card that allows duplicates";
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.OldCardCopierArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {

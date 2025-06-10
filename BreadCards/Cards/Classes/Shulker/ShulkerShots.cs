@@ -1,20 +1,13 @@
 ﻿using ClassesManagerReborn;
-using ClassesManagerReborn;
 using ClassesManagerReborn.Util;
 using ModdingUtils.Utils;
-using ModsPlus;
-using Photon.Pun;
-using Photon.Realtime.Demo;
-using RWF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
-using static ObjectsToSpawn;
 
 namespace BreadCards.Cards.Classes.Shulker
 {
@@ -36,16 +29,22 @@ namespace BreadCards.Cards.Classes.Shulker
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
 
-            ShulkerHoming.resetData();
+            if (!ShulkerHoming.stats.ContainsKey(player.playerID)) ShulkerHoming.stats.Add(player.playerID, new ShulkerData().resetData());
+            else ShulkerHoming.stats[player.playerID].resetData();
 
-            GameObject obj = new GameObject("ShulkerHomings", typeof(ShulkerHoming));
+            Type type = typeof(ShulkerShots);
 
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
-            list.Add(new ObjectsToSpawn
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
+
+            GameObject obj = new GameObject("MagnetShotEffect", type);
+
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
             {
                 AddToProjectile = obj
-            });
-            gun.objectsToSpawn = list.ToArray();
+            }).ToArray();
 
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
@@ -57,11 +56,11 @@ namespace BreadCards.Cards.Classes.Shulker
         }
         protected override string GetDescription()
         {
-            return "Makes your bullets accelerate towards enemies when one of their position axis are the same";
+            return "Your bullets will go towards targets when their axis aligns";
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.ShulkerShotsArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {
@@ -129,22 +128,37 @@ namespace BreadCards.Cards.Classes.Shulker
         }
     }
 
+    public class ShulkerData
+    {
+
+        public int shulkCount;
+        public float shulkRate;
+        public float shulkStop;
+        public float TPrange;
+        public float TPdelay;
+        public ShulkerData resetData()
+        {
+            shulkCount = 5;
+            shulkRate = 1.01f;
+            shulkStop = 0;
+            TPrange = 0;
+            TPdelay = 0;
+
+            return this;
+        }
+    }
     public class ShulkerHoming : MonoBehaviour
     {
         private bool start;
-
-        public static int shulkCount;
         private int shulks = 0;
 
-        public static float shulkRate;
-        public static float shulkStop;
-        public static float TPrange;
-        public static float TPdelay;
+        public static Dictionary<int, ShulkerData> stats = new Dictionary<int, ShulkerData>();
 
         private MoveTransform moveTransform;
-        private PhotonView photonView;
 
-        private bool photonViewNotNull;
+        Player owner;
+
+        ShulkerData sData;
 
         public void Awake()
         {
@@ -160,9 +174,10 @@ namespace BreadCards.Cards.Classes.Shulker
                     Destroy(obj.gameObject);
                 }
             }
-
+            if (owner == null && GetComponent<SpawnedAttack>() != null) { owner = GetComponent<SpawnedAttack>().spawner; this.ExecuteAfterSeconds(0.01f, () => Awake()); return; }
             moveTransform = GetComponent<MoveTransform>();
-            shulks = shulkCount;
+            sData = stats[owner.playerID];
+            shulks = sData.shulkCount;
 
             ogGravity = moveTransform.gravity;
 
@@ -177,20 +192,7 @@ namespace BreadCards.Cards.Classes.Shulker
                 });
             });
 
-            photonView = GetComponent<PhotonView>();
 
-            photonViewNotNull = photonView != null;
-
-
-        }
-
-        public static void resetData()
-        {
-            shulkCount = 5;
-            shulkRate = 1.01f;
-            shulkStop = 0;
-            TPrange = 0;
-            TPdelay = 0;
         }
 
         bool canHurtOwner = false;
@@ -200,8 +202,7 @@ namespace BreadCards.Cards.Classes.Shulker
         {
             if (!start) return;
 
-            if (photonViewNotNull)
-            {
+
 
                 Player owner = PlayerManager.instance.GetClosestPlayer(transform.position);
 
@@ -271,26 +272,25 @@ namespace BreadCards.Cards.Classes.Shulker
                     if (oldDir != dir)
                     {
                         shulks--;
-                        if (TPrange > 0)
+                        if (sData.TPrange > 0)
                         {
-                            this.ExecuteAfterSeconds(TPdelay, () =>
+                            this.ExecuteAfterSeconds(sData.TPdelay, () =>
                             {
-                                if (TPrange > 0) transform.position += moveTransform.velocity * 10f * TPrange;
+                                if (sData.TPrange > 0) transform.position += moveTransform.velocity * 10f * sData.TPrange;
                             });
                         }
 
-                        if (shulkStop > 0)
+                        if (sData.shulkStop > 0)
                         {
-                                shulkStopper(shulkStop);
+                            shulkStopper(sData.shulkStop);
                         }
                     }
 
                 }
                 if (moveTransform.velocity.magnitude <= maxSpeed && dir > -1)
                 {
-                    moveTransform.velocity *= shulkRate;
+                    moveTransform.velocity *= sData.shulkRate;
                 }
-            }
         }
 
         Coroutine shulkStopCoroutine;
@@ -298,14 +298,14 @@ namespace BreadCards.Cards.Classes.Shulker
         public void shulkStopper(float time)
         {
             if (shulkStopCoroutine != null)
-            StopCoroutine(shulkStopCoroutine);
+                StopCoroutine(shulkStopCoroutine);
             shulkStopCoroutine = StartCoroutine(ShulkStopCoroutine(time));
         }
         float ogGravity;
         IEnumerator ShulkStopCoroutine(float time)
         {
             yield return new WaitForSeconds(time);
-            shulks = shulkCount;
+            shulks = sData.shulkCount;
             dir = -1;
             moveTransform.gravity = ogGravity;
         }

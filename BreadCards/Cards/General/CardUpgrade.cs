@@ -1,22 +1,10 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
-
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
-using System.Collections.ObjectModel;
-using UnboundLib.Utils;
-using System.Reflection;
 using System.Linq;
-using System.Collections.Generic;
 using ModdingUtils.Extensions;
-using HarmonyLib;
 using ModdingUtils.Utils;
-using CardThemeLib;
-using RarityLib;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.General
 {
     class CardUpgrade : CustomCard
     {
@@ -41,7 +29,7 @@ namespace BreadCards.Cards
                 }
             }
 
-            return (card.rarity == newRarity);
+            return card.rarity == newRarity;
         }
 
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
@@ -54,7 +42,7 @@ namespace BreadCards.Cards
 
             if (oldCard != null)
             {
-                card = ModdingUtils.Utils.Cards.instance.NORARITY_GetRandomCardWithCondition(player, gun, gunAmmo, data, health, gravity, block, characterStats, this.HigherRarityCondition);
+                card = ModdingUtils.Utils.Cards.instance.NORARITY_GetRandomCardWithCondition(player, gun, gunAmmo, data, health, gravity, block, characterStats, HigherRarityCondition);
 
                 if (card == null)
                 {

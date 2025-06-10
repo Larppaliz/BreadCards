@@ -1,14 +1,9 @@
 ﻿using UnboundLib.Cards;
 using UnityEngine;
 
-using PickNCards;
-using ModdingUtils;
-using UnboundLib.GameModes;
-using ModsPlus;
-
-namespace BreadCards.Cards
+namespace BreadCards.Cards.Debuff
 {
-    class Bounce : CustomCard
+    class BounceCurse : CustomCard
     {
         public static CardInfo CardInfo { get; internal set; }
 
@@ -33,7 +28,7 @@ namespace BreadCards.Cards
         }
         protected override string GetDescription()
         {
-            return "Added by Bouncing Sabotage";
+            return "";
         }
         protected override GameObject GetCardArt()
         {

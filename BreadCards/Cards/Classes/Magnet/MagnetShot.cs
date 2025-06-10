@@ -1,19 +1,14 @@
 ﻿using ClassesManagerReborn;
 using ModdingUtils.Utils;
-using ModsPlus;
-using Photon.Pun;
-using Photon.Realtime;
-using RWF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
-namespace BreadCards.Cards
+namespace BreadCards.Cards.Classes.Magnet
 {
     class MagnetShots : CustomCard
     {
@@ -27,18 +22,23 @@ namespace BreadCards.Cards
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            MagnetShot.resetData();
 
-            GameObject obj = new GameObject("MagnetShots", typeof(MagnetShot));
+            if (!MagnetShot.stats.ContainsKey(player.playerID)) MagnetShot.stats.Add(player.playerID, new MagnetData().resetData());
+            else MagnetShot.stats[player.playerID].resetData();
 
-            MagnetShot.ownerID = player.playerID;
+                Type type = typeof(MagnetShot);
 
-            List<ObjectsToSpawn> list = gun.objectsToSpawn.ToList();
-            list.Add(new ObjectsToSpawn
+            foreach (ObjectsToSpawn ots in gun.objectsToSpawn)
+            {
+                if (ots.AddToProjectile.GetComponent(type) != null) return;
+            }
+
+            GameObject obj = new GameObject("MagnetShotEffect", type);
+
+            gun.objectsToSpawn = gun.objectsToSpawn.Append(new ObjectsToSpawn
             {
                 AddToProjectile = obj
-            });
-            gun.objectsToSpawn = list.ToArray();
+            }).ToArray();
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -50,11 +50,11 @@ namespace BreadCards.Cards
         }
         protected override string GetDescription()
         {
-            return "Makes your bullets change direction towards enemies when they come close to them";
+            return "Makes your bullets change direction towards <color=#ff0000>Enemies</color> when they come close to them";
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.MagnetShotsArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {
@@ -120,22 +120,35 @@ namespace BreadCards.Cards
         }
     }
 
+    public class MagnetData
+    {
+        public float magnetDelay;
+        public float magnetRange;
+        public float magnetCD;
+        public bool magnetTP;
+        public bool magnetStop;
+
+        public MagnetData resetData()
+        {
+            magnetDelay = 0.2f;
+            magnetRange = 6f;
+            magnetCD = 1f;
+            magnetTP = false;
+            magnetStop = false;
+
+            return this;
+        }
+    }
     public class MagnetShot : MonoBehaviour
     {
-        public static int ownerID;
 
         public Player owner;
 
-        public static float magnetDelay;
-        public static float magnetRange;
-        public static float magnetCD;
-        public static bool magnetTP;
-        public static bool magnetStop;
+        public static Dictionary<int, MagnetData> stats = new Dictionary<int, MagnetData>();
 
         private MoveTransform moveTransform;
-        private PhotonView photonView;
 
-        private bool photonViewNotNull;
+        MagnetData mData;
 
         public void Awake()
         {
@@ -151,13 +164,12 @@ namespace BreadCards.Cards
                     Destroy(obj.gameObject);
                 }
             }
-            this.ExecuteAfterSeconds(0.1f, () =>
+            if (owner == null && GetComponent<SpawnedAttack>() != null) { owner = GetComponent<SpawnedAttack>().spawner; this.ExecuteAfterSeconds(0.01f, () => Awake()); return; }
+            this.ExecuteAfterSeconds(0.05f, () =>
             {
                 delay = false;
                 start = true;
                 ownerDelay = true;
-
-                photonView = GetComponent<PhotonView>();
                 moveTransform = GetComponent<MoveTransform>();
 
                 this.ExecuteAfterSeconds(0.5f, () =>
@@ -167,37 +179,29 @@ namespace BreadCards.Cards
                 });
 
         }
-
-        public static void resetData()
-        {
-            magnetDelay = 0.2f;
-            magnetRange = 6f;
-            magnetCD = 1f;
-            magnetTP = false;
-            magnetStop = false;
-        }
         bool start = false;
         bool delay;
         bool ownerDelay;
         public void Update()
         {
-            if (photonView != null)
-            {
 
-                if (owner == null) { owner = PlayerManager.instance.GetPlayerWithID(ownerID); return; }
+
+                if (owner == null && GetComponent<SpawnedAttack>() != null) { owner = GetComponent<SpawnedAttack>().spawner; return; }
+
+                mData = stats[owner.playerID];
 
                 if (start)
                 {
 
                     foreach (var player in PlayerManager.instance.players.Where(PlayerStatus.PlayerAlive))
                     {
-                        if (BreadCards.Distance(transform.position, player.transform.position) < magnetRange && !delay)
+                        if (BreadCards.Distance(transform.position, player.transform.position) < mData.magnetRange && !delay)
                         {
                             if (player != owner || !ownerDelay) magnetize(player.transform.position);
                         }
                     }
                 }
-            }
+
         }
 
         public void magnetize(Vector2 targetPos)
@@ -208,21 +212,21 @@ namespace BreadCards.Cards
                 float grav = moveTransform.gravity;
                 moveTransform.velocity = new Vector2(0.0f, 0.01f);
                 moveTransform.gravity *= 0f;
-                this.ExecuteAfterSeconds(magnetDelay, () =>
+                this.ExecuteAfterSeconds(mData.magnetDelay, () =>
                 {
 
                     moveTransform.velocity = BreadCards.DirectionTo(transform.position, targetPos) * 80f;
 
-                    if (magnetTP) transform.position = targetPos;
+                    if (mData.magnetTP) transform.position = targetPos;
 
-                    if (magnetStop) { moveTransform.velocity = new Vector2(0.0f, 0.01f); moveTransform.gravity *= 0f; }
+                    if (mData.magnetStop) { moveTransform.velocity = new Vector2(0.0f, 0.01f); moveTransform.gravity *= 0f; }
 
                     this.ExecuteAfterSeconds(0.4f / owner.data.weaponHandler.gun.projectielSimulatonSpeed, () =>
                     {
                         moveTransform.gravity = grav;
                     });
 
-                    this.ExecuteAfterSeconds(magnetCD, () =>
+                    this.ExecuteAfterSeconds(mData.magnetCD, () =>
                     {
                         delay = false;
                     });
