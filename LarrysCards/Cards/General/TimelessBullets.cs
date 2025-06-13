@@ -1,0 +1,65 @@
+﻿using UnboundLib.Cards;
+using UnityEngine;
+
+namespace LarrysCards.Cards.General
+{
+    class TimelessBullets : CustomCard
+    {
+        public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
+        {
+            gun.damage = 0.75f;
+        }
+        public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
+        {
+            gun.projectielSimulatonSpeed += 2f;
+        }
+        public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
+        {
+        }
+
+        protected override string GetTitle()
+        {
+            return "Timeless Bullets";
+        }
+        protected override string GetDescription()
+        {
+            return "";
+        }
+        protected override GameObject GetCardArt()
+        {
+            return null;
+        }
+        protected override CardInfo.Rarity GetRarity()
+        {
+            return CardInfo.Rarity.Uncommon;
+        }
+        protected override CardInfoStat[] GetStats()
+        {
+            return new CardInfoStat[]
+            {
+                new CardInfoStat()
+                {
+                    positive = true,
+                    stat = "Projectile Timescale",
+                    amount = "+200%",
+                    simepleAmount = CardInfoStat.SimpleAmount.Some
+                },
+                new CardInfoStat()
+                {
+                    positive = false,
+                    stat = "DMG",
+                    amount = "-25%",
+                    simepleAmount = CardInfoStat.SimpleAmount.Some
+                }
+            };
+        }
+        protected override CardThemeColor.CardThemeColorType GetTheme()
+        {
+            return CardThemeColor.CardThemeColorType.FirepowerYellow;
+        }
+        public override string GetModName()
+        {
+            return LarrysCards.ModInitials;
+        }
+    }
+}

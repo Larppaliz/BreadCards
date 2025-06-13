@@ -1,0 +1,84 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="AssetsEmbedded\coolroundsartlol" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="AssetsEmbedded\coolroundsartlol" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\ROUNDS\cache\BepInEx-BepInExPack_ROUNDS\5.4.1901\BepInExPack_ROUNDS\BepInEx\core\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>bin\Debug\netstandard2.1\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>bin\Debug\netstandard2.1\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\ROUNDS\cache\BepInEx-BepInExPack_ROUNDS\5.4.1901\BepInExPack_ROUNDS\BepInEx\core\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="ClassesManagerReborn">
+      <HintPath>bin\Debug\netstandard2.1\ClassesManagerReborn.dll</HintPath>
+    </Reference>
+    <Reference Include="LarrysMod">
+      <HintPath>..\..\LarrysMOd\LarrysMod.dll</HintPath>
+    </Reference>
+    <Reference Include="ModdingUtils">
+      <HintPath>bin\Debug\netstandard2.1\ModdingUtils.dll</HintPath>
+    </Reference>
+    <Reference Include="Photon3Unity3D">
+      <HintPath>bin\Debug\netstandard2.1\Photon3Unity3D.dll</HintPath>
+    </Reference>
+    <Reference Include="PhotonRealtime">
+      <HintPath>bin\Debug\netstandard2.1\PhotonRealtime.dll</HintPath>
+    </Reference>
+    <Reference Include="PhotonUnityNetworking">
+      <HintPath>bin\Debug\netstandard2.1\PhotonUnityNetworking.dll</HintPath>
+    </Reference>
+    <Reference Include="PickNCards">
+      <HintPath>..\..\..\..\AppData\Roaming\Thunderstore Mod Manager\DataFolder\ROUNDS\cache\Pykess-Pick_N_Cards\0.2.6\PickNCards.dll</HintPath>
+    </Reference>
+    <Reference Include="RarityLib">
+      <HintPath>bin\Debug\netstandard2.1\RarityLib.dll</HintPath>
+    </Reference>
+    <Reference Include="SimulationChamber">
+      <HintPath>bin\Debug\netstandard2.1\SimulationChamber.dll</HintPath>
+    </Reference>
+    <Reference Include="SonigonAudioEngine.Runtime">
+      <HintPath>bin\Debug\netstandard2.1\SonigonAudioEngine.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="UnboundLib">
+      <HintPath>bin\Debug\netstandard2.1\UnboundLib.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>bin\Debug\netstandard2.1\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>bin\Debug\netstandard2.1\UnityEngine.AssetBundleModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>bin\Debug\netstandard2.1\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>bin\Debug\netstandard2.1\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>bin\Debug\netstandard2.1\UnityEngine.Physics2DModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>bin\Debug\netstandard2.1\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UtilityCategories">
+      <HintPath>bin\Debug\netstandard2.1\UtilityCategories.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
