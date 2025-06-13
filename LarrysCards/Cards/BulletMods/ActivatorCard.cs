@@ -17,7 +17,7 @@ namespace LarrysCards.Cards.BulletMods
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             CardInfo = cardInfo;
-            cardInfo.allowMultiple = true;
+            cardInfo.allowMultiple = false;
 
             block.cdMultiplier = 0.75f;
         }

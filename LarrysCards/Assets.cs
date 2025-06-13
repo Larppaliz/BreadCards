@@ -24,5 +24,8 @@ namespace LarrysCards
         public static GameObject UltraDefenseArt = Bundle.LoadAsset<GameObject>("C_UltraDefense");
         public static GameObject UltraDefendedArt = Bundle.LoadAsset<GameObject>("C_UltraDefended");
         public static GameObject ZigZagArt = Bundle.LoadAsset<GameObject>("C_ZigZag");
+
+        public static GameObject MultiplyingSlimeArt = Bundle.LoadAsset<GameObject>("C_MultiplyingSlime");
+        public static GameObject MultipliedSlimeArt = Bundle.LoadAsset<GameObject>("C_MultipliedSlime");
     }
 }

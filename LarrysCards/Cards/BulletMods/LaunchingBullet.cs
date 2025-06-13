@@ -82,7 +82,7 @@ namespace LarrysCards.Cards.BulletMods
         }
         protected override CardInfo.Rarity GetRarity()
         {
-            return CardInfo.Rarity.Common;
+            return CardInfo.Rarity.Uncommon;
         }
         protected override CardInfoStat[] GetStats()
         {
@@ -151,30 +151,24 @@ namespace LarrysCards.Cards.BulletMods
 
             moveTransform = GetComponent<MoveTransform>();
 
-                if (moveTransform != null)
-                {
+            if (moveTransform != null)
+            {
 
+                this.ExecuteAfterSeconds(newtime / owner.data.weaponHandler.gun.projectielSimulatonSpeed, () =>
+                {
                     Player player = PlayerManager.instance.GetClosestPlayer(transform.position, false);
 
                     if (player != null)
                     {
-                        float x = moveTransform.velocity.x;
-                        if (x < 0) x *= -1f;
-                        float y = moveTransform.velocity.y;
-                        if (y < 0) y *= -1f;
+                        float mag = moveTransform.velocity.magnitude;
 
-                        float mag = (x + y) / 2;
+                        moveTransform.gravity = 0f;
+                        Vector2 vel = (player.transform.position - moveTransform.transform.position).normalized;
+                        moveTransform.velocity = new Vector3(vel.x, vel.y, 0f) * mag;
 
-                        if (mag <= 0) mag = moveTransform.velocity.magnitude;
-                        this.ExecuteAfterSeconds(newtime / owner.data.weaponHandler.gun.projectielSimulatonSpeed, () =>
-                        {
-                            moveTransform.gravity = 0f;
-                            Vector2 vel = (player.transform.position - transform.position).normalized;
-                            moveTransform.velocity = new Vector3(vel.x, vel.y, 0f) * 3f * mag;
-                        });
                     }
-                }
-
+                });
+            }
         }
     }
 }

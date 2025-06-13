@@ -12,17 +12,6 @@ namespace LarrysCards.Cards.General
 {
     class CardDealer : CustomCard
     {
-        public bool CommonCondition(CardInfo card, Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
-        {
-            return card.rarity == CardInfo.Rarity.Common;
-
-        }
-
-        public bool NotHas(CardInfo card, Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
-        {
-            return !player.data.currentCards.Contains(card) && card.allowMultiple;
-
-        }
 
         CardInfo[] gottencards;
         Player[] GottenCardPlayer = new Player[20];
@@ -38,12 +27,12 @@ namespace LarrysCards.Cards.General
                 Player targetplayer = PlayerManager.instance.players[i];
                 if (targetplayer.teamID == player.teamID)
                 {
-                    CardInfo randomCard1 = ModdingUtils.Utils.Cards.instance.NORARITY_GetRandomCardWithCondition(targetplayer, gun, gunAmmo, data, health, gravity, block, characterStats, NotHas);
+                    CardInfo randomCard1 = ModdingUtils.Utils.Cards.instance.NORARITY_GetRandomCardWithCondition(targetplayer, gun, gunAmmo, data, health, gravity, block, characterStats, Conditions.AnyCondition);
                     if (randomCard1 == null)
                     {
                         // if there is no valid card, then try drawing from the list of all cards (inactive + active) but still make sure it is compatible
                         CardInfo[] allCards = ((ObservableCollection<CardInfo>)typeof(CardManager).GetField("activeCards", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null)).ToList().Concat((List<CardInfo>)typeof(CardManager).GetField("inactiveCards", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null)).ToArray();
-                        randomCard1 = ModdingUtils.Utils.Cards.instance.DrawRandomCardWithCondition(allCards, targetplayer, null, null, null, null, null, null, null, NotHas);
+                        randomCard1 = ModdingUtils.Utils.Cards.instance.DrawRandomCardWithCondition(allCards, targetplayer, null, null, null, null, null, null, null, Conditions.AnyCondition);
                     }
                     GottenCardPlayer.AddItem(targetplayer);
                     gottencards.AddItem(randomCard1);
@@ -57,12 +46,12 @@ namespace LarrysCards.Cards.General
                 }
                 else
                 {
-                    CardInfo randomCard1 = ModdingUtils.Utils.Cards.instance.NORARITY_GetRandomCardWithCondition(targetplayer, gun, gunAmmo, data, health, gravity, block, characterStats, CommonCondition);
+                    CardInfo randomCard1 = ModdingUtils.Utils.Cards.instance.NORARITY_GetRandomCardWithCondition(targetplayer, gun, gunAmmo, data, health, gravity, block, characterStats, Conditions.CommonCondition);
                     if (randomCard1 == null)
                     {
                         // if there is no valid card, then try drawing from the list of all cards (inactive + active) but still make sure it is compatible
                         CardInfo[] allCards = ((ObservableCollection<CardInfo>)typeof(CardManager).GetField("activeCards", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null)).ToList().Concat((List<CardInfo>)typeof(CardManager).GetField("inactiveCards", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null)).ToArray();
-                        randomCard1 = ModdingUtils.Utils.Cards.instance.DrawRandomCardWithCondition(allCards, targetplayer, null, null, null, null, null, null, null, CommonCondition);
+                        randomCard1 = ModdingUtils.Utils.Cards.instance.DrawRandomCardWithCondition(allCards, targetplayer, null, null, null, null, null, null, null, Conditions.CommonCondition);
                     }
                     GottenCardPlayer.AddItem(targetplayer);
                     gottencards.AddItem(randomCard1);
@@ -71,6 +60,8 @@ namespace LarrysCards.Cards.General
                     ModdingUtils.Utils.CardBarUtils.instance.ShowAtEndOfPhase(targetplayer, randomCard1);
                 }
             }
+
+            
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {

@@ -43,7 +43,7 @@ namespace LarrysCards
 
         private const string ModId = "larppaliz.rounds.larryscards";
         private const string ModName = "Larrys's Cards Remake";
-        public const string Version = "0.1.0"; // What version are we on (major.minor.patch)?
+        public const string Version = "0.2.0"; // What version are we on (major.minor.patch)?
         public const string ModInitials = "LCrm";
 
         public GameObject optionsMenu;

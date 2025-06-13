@@ -3,7 +3,9 @@
 
 This is a remake of my old mod from like a year or two ago that adds a bunch of random cards and 2 classes
 
-### Currently has 74 Cards including hidden ones (22 w/ card art)
+### Currently has 76 Cards including hidden ones (25 w/ card art)
+
+(and 1 map)
 
 
 

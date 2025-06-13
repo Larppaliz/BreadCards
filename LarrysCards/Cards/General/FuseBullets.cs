@@ -11,7 +11,6 @@ namespace LarrysCards.Cards.General
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
             gun.damage *= 1f + gun.numberOfProjectiles*0.8f;
-            gun.projectileSize *= 1f + gun.numberOfProjectiles / 5f;
             gun.gravity += 0.2f * gun.numberOfProjectiles;
             gun.numberOfProjectiles = 1;
         }
@@ -44,13 +43,6 @@ namespace LarrysCards.Cards.General
                     positive = true,
                     stat = "DMG / Bullet",
                     amount = "+80%",
-                    simepleAmount = CardInfoStat.SimpleAmount.Some
-                },
-                new CardInfoStat()
-                {
-                    positive = true,
-                    stat = "Bullet Size / Bullet",
-                    amount = "+20%",
                     simepleAmount = CardInfoStat.SimpleAmount.Some
                 },
                 new CardInfoStat()

@@ -31,7 +31,7 @@ namespace LarrysCards.Cards.General
         }
         protected override GameObject GetCardArt()
         {
-            return null;
+            return Assets.MultipliedSlimeArt;
         }
         protected override CardInfo.Rarity GetRarity()
         {
