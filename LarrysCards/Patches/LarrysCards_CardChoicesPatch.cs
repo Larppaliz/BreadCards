@@ -48,6 +48,7 @@ namespace LarrysCards.Patches
     [HarmonyPatch(typeof(CardChoice), "SpawnUniqueCard")]
     public static class LarrysCards_CardChoicesPatch
     {
+
         public static Dictionary<int, List<ForcedCardRequest>> pendingForcedCards = new Dictionary<int, List<ForcedCardRequest>>();
 
         public static Dictionary<int, List<ForcedCardRequest>> readyForcedCards = new Dictionary<int, List<ForcedCardRequest>>();

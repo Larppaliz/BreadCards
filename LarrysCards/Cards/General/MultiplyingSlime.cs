@@ -1,4 +1,5 @@
 ﻿using LarrysCards.Patches;
+using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
@@ -9,8 +10,7 @@ namespace LarrysCards.Cards.General
         public static CardInfo CardInfo;
         public override void Callback()
         {
-            if (!LarrysCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
-                LarrysCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, _ => MultipliedSlime.CardInfo);
+            gameObject.GetOrAddComponent<CardExtraInfo>().propCard = (_, __) => MultipliedSlime.CardInfo;
         }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {

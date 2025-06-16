@@ -211,12 +211,17 @@ namespace LarrysCards.Cards.Classes.Magnet
             {
                 delay = true;
                 float grav = moveTransform.gravity;
+
+                float mag = moveTransform.velocity.magnitude;
+
                 moveTransform.velocity = new Vector2(0.0f, 0.01f);
                 moveTransform.gravity *= 0f;
+                
+
                 this.ExecuteAfterSeconds(mData.magnetDelay, () =>
                 {
 
-                    moveTransform.velocity = (transform.position - targetPos).normalized * 80f;
+                    moveTransform.velocity = (targetPos - transform.position).normalized * mag;
 
                     if (mData.magnetTP) transform.position = targetPos;
 

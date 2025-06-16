@@ -3,6 +3,7 @@ using UnityEngine;
 using ModdingUtils.Extensions;
 using ModdingUtils.Utils;
 using LarrysCards.Patches;
+using UnboundLib;
 
 namespace LarrysCards.Cards.General
 {
@@ -11,32 +12,32 @@ namespace LarrysCards.Cards.General
         public static CardInfo CardInfo;
         public override void Callback()
         {
-            if (!LarrysCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
-                LarrysCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, (player) =>
+            gameObject.GetOrAddComponent<CardExtraInfo>().propCard = (player, _) =>
                 {
-                    CardInfo card = null;
+                    CardInfo addedCard = null;
 
 
                     for (int i = player.data.currentCards.Count - 1; i >= 0; i--)
                     {
-                        card = player.data.currentCards[i];
+                        CardInfo card = player.data.currentCards[i];
 
                         if (card != null)
                         {
                             if (LarrysCards.allowCard(player, card))
                             {
+                                addedCard = card;
                                 break;
                             }
                         }
                     }
 
-                    if (card == null)
+                    if (addedCard == null)
                     {
-                        card = Rice.CardInfo;
+                        addedCard = Rice.CardInfo;
                     }
 
-                    return card;
-                });
+                    return addedCard;
+                };
         }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
@@ -46,31 +47,29 @@ namespace LarrysCards.Cards.General
 
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            System.Random random = new System.Random();
-
-            CardInfo card = null;
+            CardInfo addedCard = null;
 
 
-            for (int i = player.data.currentCards.Count-1; i >= 0; i--)
+            for (int i = player.data.currentCards.Count - 1; i >= 0; i--)
             {
-                card = player.data.currentCards[i];
+                CardInfo card = player.data.currentCards[i];
 
                 if (card != null)
                 {
-                    if (card.allowMultiple)
+                    if (LarrysCards.allowCard(player, card))
                     {
+                        addedCard = card;
                         break;
                     }
                 }
             }
 
-            if (card == null)
+            if (addedCard == null)
             {
-                card = Rice.CardInfo;
+                addedCard = Rice.CardInfo;
             }
 
-            ModdingUtils.Utils.Cards.instance.AddCardToPlayer(player, card, addToCardBar:true);
-            CardBarUtils.instance.ShowAtEndOfPhase(player,card);
+            ModdingUtils.Utils.Cards.instance.AddCardToPlayer(player, addedCard, addToCardBar:true);
 
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)

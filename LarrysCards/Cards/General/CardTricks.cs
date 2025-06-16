@@ -67,7 +67,7 @@ namespace LarrysCards.Cards.General
         }
         protected override string GetDescription()
         {
-            return "Get a copy of a random players newest card that allows duplicates.";
+            return "Get a copy of the newest card from a random player";
         }
         protected override GameObject GetCardArt()
         {

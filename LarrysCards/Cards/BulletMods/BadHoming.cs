@@ -124,7 +124,7 @@ namespace LarrysCards.Cards.BulletMods
                 Vector2 targetpos = player.transform.position;
                     if (Vector2.Distance(transform.position, targetpos) < 20f)
                     {
-                        Vector2 vel = (player.transform.position - transform.position).normalized;
+                        Vector2 vel = (targetpos - (Vector2)transform.position).normalized;
                         moveTransform.velocity += new Vector3(vel.x, vel.y, 0f) * owner.data.weaponHandler.gun.projectielSimulatonSpeed;
                     }
                 }

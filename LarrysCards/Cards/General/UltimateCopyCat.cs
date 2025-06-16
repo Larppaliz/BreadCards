@@ -1,6 +1,7 @@
 ﻿using ClassesManagerReborn;
 using ClassesManagerReborn.Util;
 using LarrysCards.Patches;
+using ModdingUtils.Extensions;
 using Photon.Pun.UtilityScripts;
 using System.Linq;
 using UnboundLib.Cards;
@@ -15,6 +16,8 @@ namespace LarrysCards.Cards.General
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             statModifiers.health = 0.7f;
+
+            cardInfo.GetAdditionalData().canBeReassigned = false;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -37,17 +40,12 @@ namespace LarrysCards.Cards.General
                         var randomPlayer = candidates[rand.Next(candidates.Count)];
                         int randNumber = Random.Range(0, randomPlayer.data.currentCards.Count);
                         CardInfo card = null;
-
-                        card = randomPlayer.data.currentCards[randNumber];
+                        card = card.GetCopyOf(randomPlayer.data.currentCards[randNumber]);
 
                         if (card == null) continue;
 
-                        bool allowed = true;
-                        if (ClassesRegistry.Get(card) != null)
-                        {
-                            allowed = ClassesRegistry.Get(card).PlayerIsAllowedCard(player);
-                        }
-                        if (allowed) return card;
+                        if (LarrysCards.allowCard(player, card))
+                            return card;
                     }
 
                     return null;
@@ -98,7 +96,7 @@ namespace LarrysCards.Cards.General
         }
         protected override string GetDescription()
         {
-            return "Your draws will have a copy of a random <color=#ff0000>Enemies</color> card.";
+            return "Your draws will have copies of other players cards";
         }
         protected override GameObject GetCardArt()
         {

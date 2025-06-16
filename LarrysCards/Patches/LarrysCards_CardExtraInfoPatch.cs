@@ -1,17 +1,24 @@
-﻿using HarmonyLib;
+﻿using ClassesManagerReborn.Util;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using UnboundLib;
 using UnityEngine;
 
 namespace LarrysCards.Patches
 {
+
+    public class CardExtraInfo : MonoBehaviour
+    {
+        public Func<Player, CardExtraInfo, CardInfo> propCard;
+
+        
+    }
+
     [HarmonyPatch(typeof(CardChoice), "Update")]
     public static class LarrysCards_CardExtraInfoPatch
     {
-        public static Dictionary<string, Func<Player, CardInfo>> extraInfoCardData = new Dictionary<string, Func<Player, CardInfo>>();
-
         public static GameObject shownObject;
         public static int selectedCard = -1;
         public static int spawnedCount = 0;
@@ -22,6 +29,7 @@ namespace LarrysCards.Patches
 
             foreach (GameObject obj in gameObjects)
             {
+                if (obj == null) continue;
                 if (obj.GetComponent<CardInfo>())
                 {
                     CardInfo info = obj.GetComponent<CardInfo>();
@@ -36,7 +44,10 @@ namespace LarrysCards.Patches
         {
             selectedCard = -1;
 
-            if (shownObject != null) GameObject.Destroy(shownObject);
+            if (shownObject == null) return;
+
+            GameObject.Destroy(shownObject);
+
             shownObject = null;
         }
 
@@ -68,41 +79,45 @@ namespace LarrysCards.Patches
                     {
                         List<CardInfo> cards = getCardsFromGameObjects(___spawnedCards);
 
+                        if (index < 0 || index > ___spawnedCards.Count-1) return;
+
+                        GameObject spawnedCard = ___spawnedCards[index];
+
                         Player player = PlayerManager.instance.players[__instance.pickrID];
 
                         if (player == null) return;
 
-                        CardInfo card = null;
-
                         if (cards.Count - 1 < index || index < 0) return;
 
-                        if (extraInfoCardData.ContainsKey(cards[index].cardName)) card = extraInfoCardData[cards[index].cardName].Invoke(player);
+                        if (spawnedCard == null) return;
 
-                        if (card == null)
+                        if (spawnedCard.GetComponent<CardExtraInfo>() == null) return;
+
+                        CardExtraInfo extraInfo = spawnedCard.GetComponent<CardExtraInfo>();
+
+                        if (extraInfo.propCard != null)
                         {
-                            return;
+                            CardInfo propCard = extraInfo.propCard.Invoke(player, extraInfo);
+
+                            Transform cardTransform = ___spawnedCards[index].transform;
+
+                            Vector3 baseOffset = cardTransform.right;
+
+                            if (cardTransform.position.x > 0) baseOffset *= -1f;
+
+                            if (cardTransform.rotation.eulerAngles.z == 0) baseOffset = cardTransform.up * -1.3f;
+
+                            shownObject = __instance.AddCardVisual(propCard, new Vector3(0, 0, 0));
+                            Vector3 rightOffset = baseOffset * 12f;
+                            rightOffset.x *= cardTransform.localScale.x;
+                            rightOffset.y *= cardTransform.localScale.y;
+                            rightOffset.z *= cardTransform.localScale.z;
+
+                            shownObject.transform.localScale = cardTransform.localScale * 0.8f;
+                            shownObject.transform.position = cardTransform.position + rightOffset;
+                            shownObject.transform.AddZPosition(-15);
+                            shownObject.transform.rotation = cardTransform.rotation;
                         }
-
-                        Transform cardTransform = ___spawnedCards[index].transform;
-
-
-                        Vector3 baseOffset = cardTransform.right;
-
-                        if (cardTransform.position.x > 0) baseOffset *= -1f;
-
-                        if (cardTransform.rotation.eulerAngles.z == 0) baseOffset = cardTransform.up * -1.3f;
-
-                        shownObject = __instance.AddCardVisual(card, new Vector3(0, 0, 0));
-                        Vector3 rightOffset = baseOffset * 12f;
-                        rightOffset.x *= cardTransform.localScale.x;
-                        rightOffset.y *= cardTransform.localScale.y;
-                        rightOffset.z *= cardTransform.localScale.z;
-
-                        shownObject.transform.localScale = cardTransform.localScale * 0.8f;
-                        shownObject.transform.position = cardTransform.position + rightOffset;
-                        shownObject.transform.AddZPosition(-15);
-                        shownObject.transform.rotation = cardTransform.rotation;
-
                     }
                 }
                 else DestroyObject();

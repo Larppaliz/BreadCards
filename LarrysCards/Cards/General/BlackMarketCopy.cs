@@ -1,4 +1,5 @@
-﻿using UnboundLib.Cards;
+﻿using ModdingUtils.Extensions;
+using UnboundLib.Cards;
 using UnityEngine;
 
 namespace LarrysCards.Cards.General
@@ -9,6 +10,7 @@ namespace LarrysCards.Cards.General
         public override bool GetEnabled() => false;
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
+            cardInfo.GetAdditionalData().canBeReassigned = false;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
@@ -17,7 +19,7 @@ namespace LarrysCards.Cards.General
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            LarrysMod.LarrysMod.instance.PlayerDrawsIncrease(player, 2);
+            LarrysMod.LarrysMod.instance.PlayerDrawsIncrease(player, -2);
         }
 
         protected override string GetTitle()

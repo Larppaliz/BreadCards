@@ -1,4 +1,5 @@
 ﻿using LarrysCards.Patches;
+using ModdingUtils.Extensions;
 using UnboundLib.Cards;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace LarrysCards.Cards.General
         public static CardInfo CardInfo;
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
+            cardInfo.GetAdditionalData().canBeReassigned = false;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {

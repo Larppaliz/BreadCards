@@ -1,4 +1,6 @@
 ﻿using LarrysCards.Patches;
+using ModdingUtils.Extensions;
+using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
@@ -9,11 +11,11 @@ namespace LarrysCards.Cards.Debuff
         public static CardInfo CardInfo;
         public override void Callback()
         {
-            if (!LarrysCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
-                LarrysCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, _ => StickySolution.CardInfo);
+            gameObject.GetOrAddComponent<CardExtraInfo>().propCard = (_, __) => StickySolution.CardInfo;
         }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
+            cardInfo.GetAdditionalData().canBeReassigned = false;
             gun.damage = 1.50f;
             cardInfo.allowMultiple = false;
         }

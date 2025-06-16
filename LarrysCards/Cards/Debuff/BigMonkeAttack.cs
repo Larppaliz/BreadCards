@@ -1,4 +1,6 @@
 ﻿using LarrysCards.Patches;
+using ModdingUtils.Extensions;
+using UnboundLib;
 using UnboundLib.Cards;
 using UnityEngine;
 
@@ -9,11 +11,15 @@ namespace LarrysCards.Cards.Debuff
         public static CardInfo CardInfo;
         public override void Callback()
         {
-            if (!LarrysCards_CardExtraInfoPatch.extraInfoCardData.ContainsKey(CardInfo.cardName))
-                LarrysCards_CardExtraInfoPatch.extraInfoCardData.Add(CardInfo.cardName, _ => BigMonkeCurse.CardInfo);
+            gameObject.GetOrAddComponent<CardExtraInfo>().propCard = (_, __) => BigMonkeCurse.CardInfo;
+        }
+        public override void OnReassignCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
+        {
+            gun.percentageDamage += 0.03f;
         }
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
+            cardInfo.GetAdditionalData().canBeReassigned = false;
             cardInfo.allowMultiple = false;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)

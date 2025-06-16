@@ -182,12 +182,12 @@ namespace LarrysCards.Cards.Classes.Shulker
 
             ogGravity = moveTransform.gravity;
 
-            this.ExecuteAfterSeconds(0.3f, () =>
+            this.ExecuteAfterSeconds(0.3f / owner.data.weaponHandler.gun.projectielSimulatonSpeed, () =>
             {
                 start = true;
 
 
-                this.ExecuteAfterSeconds(0.3f, () =>
+                this.ExecuteAfterSeconds(0.3f / owner.data.weaponHandler.gun.projectielSimulatonSpeed, () =>
                 {
                     canHurtOwner = true;
                 });
@@ -219,6 +219,7 @@ namespace LarrysCards.Cards.Classes.Shulker
 
                 if (shulks > 0)
                 {
+                    Vector3? targetPos = null;
                     oldDir = dir;
                     foreach (var player in PlayerManager.instance.players.Where(PlayerStatus.PlayerAlive))
                     {
@@ -234,6 +235,8 @@ namespace LarrysCards.Cards.Classes.Shulker
                                         moveTransform.gravity = 0f;
                                         moveTransform.velocity = new Vector2(0, maxSpeed * -1);
                                         moveTransform.velocity /= 10f;
+
+                                        targetPos = player.transform.position;
                                     }
                                 }
                                 if (Math.Round(player.transform.position.x) == Math.Round(transform.position.x) && player.transform.position.y > transform.position.y)
@@ -244,6 +247,8 @@ namespace LarrysCards.Cards.Classes.Shulker
                                         moveTransform.gravity = 0f;
                                         moveTransform.velocity = new Vector2(0, maxSpeed);
                                         moveTransform.velocity /= 10f;
+
+                                        targetPos = player.transform.position;
                                     }
                                 }
                                 if (Math.Round(player.transform.position.y) == Math.Round(transform.position.y) && player.transform.position.x < transform.position.x)
@@ -254,7 +259,9 @@ namespace LarrysCards.Cards.Classes.Shulker
                                         moveTransform.gravity = 0f;
                                         moveTransform.velocity = new Vector2(maxSpeed * -1, 0);
                                         moveTransform.velocity /= 10f;
-                                    }
+
+                                    targetPos = player.transform.position;
+                                }
                                 }
                                 if (Math.Round(player.transform.position.y) == Math.Round(transform.position.y) && player.transform.position.x > transform.position.x)
                                 {
@@ -264,6 +271,8 @@ namespace LarrysCards.Cards.Classes.Shulker
                                         moveTransform.gravity = 0f;
                                         moveTransform.velocity = new Vector2(maxSpeed, 0);
                                         moveTransform.velocity /= 10f;
+
+                                        targetPos = player.transform.position;
                                     }
                                 }
                             }
@@ -277,7 +286,16 @@ namespace LarrysCards.Cards.Classes.Shulker
                         {
                             this.ExecuteAfterSeconds(sData.TPdelay, () =>
                             {
-                                if (sData.TPrange > 0) transform.position += moveTransform.velocity * 10f * sData.TPrange;
+                                if (sData.TPrange > 0)
+                                {
+
+                                    Vector3 tpPos = transform.position + moveTransform.velocity * 10f * sData.TPrange;
+                                    if (targetPos == null || Vector2.Distance(transform.position, targetPos.Value) > Vector2.Distance(transform.position, tpPos))
+                                    {
+                                        transform.position = tpPos;
+                                    }
+                                    else transform.position = targetPos.Value;
+                                }
                             });
                         }
 
