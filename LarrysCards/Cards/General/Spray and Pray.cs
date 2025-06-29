@@ -7,13 +7,13 @@ namespace LarrysCards.Cards.General
     {
         public override void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
-            gun.ammo = 7;
-            gun.attackSpeed = 0.5f;
-            gun.reloadTimeAdd = 2;
+            gun.ammo = 6;
+            gun.attackSpeed = 0.33f;
+            gun.reloadTimeAdd = 0.5f;
         }
         public override void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            gun.spread += 0.125f;
+            gun.spread += 0.25f;
             gun.dontAllowAutoFire = false;
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
@@ -44,28 +44,28 @@ namespace LarrysCards.Cards.General
                 {
                     positive = true,
                     stat = "ATKSPD",
-                    amount = "x2",
+                    amount = "x3",
                     simepleAmount = CardInfoStat.SimpleAmount.notAssigned
                 },
                 new CardInfoStat()
                 {
                     positive = true,
                     stat = "AMMO",
-                    amount = "+7",
+                    amount = "+6",
                     simepleAmount = CardInfoStat.SimpleAmount.Some
                 },
                 new CardInfoStat()
                 {
                     positive = false,
                     stat = "Spread",
-                    amount = "+45°",
+                    amount = "+90°",
                     simepleAmount = CardInfoStat.SimpleAmount.Some
                 },
                 new CardInfoStat()
                 {
                     positive = false,
                     stat = "Reload Time",
-                    amount = "+2s",
+                    amount = "+0.5s",
                     simepleAmount = CardInfoStat.SimpleAmount.aLotOf
                 }
             };

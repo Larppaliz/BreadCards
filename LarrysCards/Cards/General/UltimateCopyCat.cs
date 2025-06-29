@@ -40,7 +40,7 @@ namespace LarrysCards.Cards.General
                         var randomPlayer = candidates[rand.Next(candidates.Count)];
                         int randNumber = Random.Range(0, randomPlayer.data.currentCards.Count);
                         CardInfo card = null;
-                        card = card.GetCopyOf(randomPlayer.data.currentCards[randNumber]);
+                        card = randomPlayer.data.currentCards[randNumber];
 
                         if (card == null) continue;
 
@@ -56,7 +56,7 @@ namespace LarrysCards.Cards.General
         }
         public override void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
-            LarrysCards_CardChoicesPatch.RemoveForcedCardChoice(player, new ForcedCardRequest
+            LarrysCards_CardChoicesPatch.AddForcedCardChoice(player, new ForcedCardRequest
             {
                 customRoll = (requestingPlayer) =>
                 {
@@ -75,11 +75,11 @@ namespace LarrysCards.Cards.General
                         var randomPlayer = candidates[rand.Next(candidates.Count)];
                         int randNumber = Random.Range(0, randomPlayer.data.currentCards.Count);
                         CardInfo card = null;
-                        card = card.GetCopyOf(randomPlayer.data.currentCards[randNumber]);
+                        card = randomPlayer.data.currentCards[randNumber];
 
                         if (card == null) continue;
 
-                        if (LarrysCards.allowCard(player,card))
+                        if (LarrysCards.allowCard(player, card))
                             return card;
                     }
 

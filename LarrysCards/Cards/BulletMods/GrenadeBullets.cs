@@ -97,10 +97,10 @@ namespace LarrysCards.Cards.BulletMods
             {
                 new CardInfoStat()
                 {
-                    positive = true,
+                    positive = false,
                     stat = "DMG",
                     amount = "-15%",
-                    simepleAmount = CardInfoStat.SimpleAmount.Some
+                    simepleAmount = CardInfoStat.SimpleAmount.slightlyLower
                 }
             };
         }

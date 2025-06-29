@@ -59,7 +59,7 @@ namespace LarrysCards.Cards.General
         }
         protected override string GetDescription()
         {
-            return "Everyone always gets a <color=#5c7c9c>RICE</color> card";
+            return "Everyones draws will always have a <color=#5c7c9c>RICE</color> card";
         }
         protected override GameObject GetCardArt()
         {
