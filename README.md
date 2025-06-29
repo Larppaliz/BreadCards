@@ -1,5 +1,5 @@
 
-# Bread's Cards Remake
+# Larry's Cards Remake
 
 This is a remake of my old mod from like a year or two ago that adds a bunch of random cards and 2 classes
 
